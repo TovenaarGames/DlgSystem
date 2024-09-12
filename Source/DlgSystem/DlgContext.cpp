@@ -1,5 +1,5 @@
 // Copyright Csaba Molnar, Daniel Butum. All Rights Reserved.
-#include "DlgContext.h"
+#include "DlgSystem/DlgContext.h"
 
 #include "Net/UnrealNetwork.h"
 #include "Engine/Texture2D.h"

@@ -2,7 +2,7 @@
 #include "DlgEdge.h"
 
 #include "DlgConstants.h"
-#include "DlgContext.h"
+#include "DlgSystem/DlgContext.h"
 #include "DlgLocalizationHelper.h"
 #include "Nodes/DlgNode_Selector.h"
 #include "Nodes/DlgNode_Speech.h"
