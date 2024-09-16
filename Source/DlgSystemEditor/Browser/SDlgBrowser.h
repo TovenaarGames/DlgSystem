@@ -1,6 +1,8 @@
 // Copyright Csaba Molnar, Daniel Butum. All Rights Reserved.
 #pragma once
 
+#include "GameplayTagContainer.h"
+
 #include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/Views/SListView.h"
@@ -193,7 +195,7 @@ protected:
 	 * Key: Participant Name
 	 * Value: participant properties
 	 */
-	TMap<FName, TSharedPtr<FDlgBrowserTreeParticipantProperties>> ParticipantsProperties;
+	TMap<FGameplayTag, TSharedPtr<FDlgBrowserTreeParticipantProperties>> ParticipantsProperties;
 
 	//
 	// Sort variables

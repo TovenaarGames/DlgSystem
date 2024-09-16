@@ -69,7 +69,7 @@ public:
 	bool Evaluate(const UDlgContext& Context, TSet<const UDlgNode*> AlreadyVisitedNodes) const;
 
 	// Constructs the ConstructedText.
-	void RebuildConstructedText(const UDlgContext& Context, FName FallbackParticipantName);
+	void RebuildConstructedText(const UDlgContext& Context, const FGameplayTag& FallbackParticipantTag);
 
 	const TArray<FDlgTextArgument>& GetTextArguments() const { return TextArguments; }
 

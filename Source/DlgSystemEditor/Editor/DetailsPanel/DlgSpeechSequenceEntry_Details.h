@@ -3,6 +3,7 @@
 
 #include "IPropertyTypeCustomization.h"
 #include "IDetailPropertyRow.h"
+#include "GameplayTagContainer.h"
 
 #include "DlgSystem/DlgManager.h"
 #include "DlgDetailsPanelUtils.h"
@@ -46,10 +47,10 @@ public:
 		IPropertyTypeCustomizationUtils& StructCustomizationUtils) override;
 
 private:
-	/** Gets the ParticipantNames from all Dialogues. */
-	TArray<FName> GetDialoguesParticipantNames() const
+	/** Gets the ParticipantTags from all Dialogues. */
+	TArray<FGameplayTag> GetDialoguesParticipantTags() const
 	{
-		return UDlgManager::GetDialoguesParticipantNames();
+		return UDlgManager::GetDialoguesParticipantTags();
 	}
 
 	/** Gets the Speaker States from all Dialogues. */
@@ -58,10 +59,10 @@ private:
 		return UDlgManager::GetDialoguesSpeakerStates();
 	}
 
-	/** Gets the current Dialogue Participant Names. */
-	TArray<FName> GetCurrentDialogueParticipantNames() const
+	/** Gets the current Dialogue Participant Tags. */
+	TArray<FGameplayTag> GetCurrentDialogueParticipantTags() const
 	{
-		return FDlgDetailsPanelUtils::GetDialogueSortedParticipantNames(Dialogue);
+		return FDlgDetailsPanelUtils::GetDialogueSortedParticipantTags(Dialogue);
 	}
 
 	/** Handler for when text in the editable text box changed */
@@ -81,7 +82,8 @@ private:
 	TSharedPtr<IPropertyHandle> TextPropertyHandle;
 	TSharedPtr<IPropertyHandle> EdgeTextPropertyHandle;
 
-	TSharedPtr<FDlgTextPropertyPickList_CustomRowHelper> ParticipantNamePropertyRow;
+	IDetailPropertyRow* ParticipantTagPropertyRow;
+	IDetailPropertyRow* ParticipantNamePropertyRow;
 	TSharedPtr<FDlgTextPropertyPickList_CustomRowHelper> SpeakerStatePropertyRow;
 	IDetailPropertyRow* VoiceSoundWavePropertyRow = nullptr;
 	IDetailPropertyRow* VoiceDialogueWavePropertyRow = nullptr;

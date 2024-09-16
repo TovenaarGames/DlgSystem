@@ -32,6 +32,7 @@ public class DlgSystemEditor : ModuleRules
 			new string[] {
 				"Core",
 				"DlgSystem",
+				"GameplayTags",
 				// ... add other public dependencies that you statically link with here ...
 			});
 

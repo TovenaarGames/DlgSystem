@@ -387,7 +387,7 @@ FString UDlgExportTwineCommandlet::CreateTwinePassageDataFromNode(const UDlgDial
 				TEXT("``Speaker:`` //%s//\n")
 				TEXT("``Text:`` //%s//\n")
 				TEXT("``EdgeText:`` //%s//\n"),
-				*EscapeHtml(Entry.Speaker.ToString()),
+				*EscapeHtml(Entry.SpeakerTag.ToString()),
 				*EscapeHtml(Entry.Text.ToString()),
 				*EscapeHtml(Entry.EdgeText.ToString())
 			);
@@ -408,7 +408,7 @@ FString UDlgExportTwineCommandlet::CreateTwinePassageDataFromNode(const UDlgDial
 
 FString UDlgExportTwineCommandlet::GetNodeNameFromNode(const UDlgNode& Node, int32 NodeIndex, bool bIsRootNode)
 {
-	return FString::Printf(TEXT("%d. %s"), NodeIndex, bIsRootNode ? TEXT("START") : *Node.GetNodeParticipantName().ToString());
+	return FString::Printf(TEXT("%d. %s"), NodeIndex, bIsRootNode ? TEXT("START") : *Node.GetNodeParticipantTag().ToString());
 }
 
 FString UDlgExportTwineCommandlet::CreateTwinePassageDataLinksFromEdges(const UDlgDialogue& Dialogue, const TArray<FDlgEdge>& Edges, bool bNoTextOnEdges)

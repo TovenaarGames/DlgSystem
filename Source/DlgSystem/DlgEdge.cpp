@@ -98,7 +98,7 @@ bool FDlgEdge::Evaluate(const UDlgContext& Context, TSet<const UDlgNode*> Alread
 	return FDlgCondition::EvaluateArray(Context, Conditions);
 }
 
-void FDlgEdge::RebuildConstructedText(const UDlgContext& Context, FName FallbackParticipantName)
+void FDlgEdge::RebuildConstructedText(const UDlgContext& Context, const FGameplayTag& FallbackParticipantTag)
 {
 	if (TextArguments.Num() <= 0)
 	{
@@ -108,7 +108,7 @@ void FDlgEdge::RebuildConstructedText(const UDlgContext& Context, FName Fallback
 	FFormatNamedArguments OrderedArguments;
 	for (const FDlgTextArgument& DlgArgument : TextArguments)
 	{
-		OrderedArguments.Add(DlgArgument.DisplayString, DlgArgument.ConstructFormatArgumentValue(Context, FallbackParticipantName));
+		OrderedArguments.Add(DlgArgument.DisplayString, DlgArgument.ConstructFormatArgumentValue(Context, FallbackParticipantTag));
 	}
 	ConstructedText = FText::AsCultureInvariant(FText::Format(Text, OrderedArguments));
 }

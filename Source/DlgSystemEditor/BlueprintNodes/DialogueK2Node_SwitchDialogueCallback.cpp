@@ -5,8 +5,10 @@
 #include "BlueprintActionDatabaseRegistrar.h"
 #include "EdGraphSchema_K2.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "GameplayTagContainer.h"
 
 #include "DlgSystem/DlgManager.h"
+#include "DlgSystem/DlgHelper.h"
 #include "DlgBlueprintUtilities.h"
 
 #define LOCTEXT_NAMESPACE "DlgK2Node_Select"
@@ -179,8 +181,8 @@ bool UDialogueK2Node_SwitchDialogueCallback::RefreshPinNames()
 	}
 
 	static constexpr bool bBlueprintMustBeLoaded = true;
-	const FName ParticipantName = FDlgBlueprintUtilities::GetParticipantNameFromNode(this, bBlueprintMustBeLoaded);
-	if (ParticipantName == NAME_None)
+	const FGameplayTag ParticipantTag = FDlgBlueprintUtilities::GetParticipantTagFromNode(this, bBlueprintMustBeLoaded);
+	if (!UBSDlgFunctions::IsValidParticipantTag(ParticipantTag))
 	{
 		return false;
 	}
@@ -189,27 +191,27 @@ bool UDialogueK2Node_SwitchDialogueCallback::RefreshPinNames()
 	switch (CallbackType)
 	{
 		case EDlgDialogueCallback::Event:
-			NewPinNames.Append(UDlgManager::GetDialoguesParticipantEventNames(ParticipantName));
+			NewPinNames.Append(UDlgManager::GetDialoguesParticipantEventNames(ParticipantTag));
 			break;
 
 		case EDlgDialogueCallback::Condition:
-			NewPinNames.Append(UDlgManager::GetDialoguesParticipantConditionNames(ParticipantName));
+			NewPinNames.Append(UDlgManager::GetDialoguesParticipantConditionNames(ParticipantTag));
 			break;
 
 		case EDlgDialogueCallback::FloatValue:
-			NewPinNames.Append(UDlgManager::GetDialoguesParticipantFloatNames(ParticipantName));
+			NewPinNames.Append(UDlgManager::GetDialoguesParticipantFloatNames(ParticipantTag));
 			break;
 
 		case EDlgDialogueCallback::IntValue:
-			NewPinNames.Append(UDlgManager::GetDialoguesParticipantIntNames(ParticipantName));
+			NewPinNames.Append(UDlgManager::GetDialoguesParticipantIntNames(ParticipantTag));
 			break;
 
 		case EDlgDialogueCallback::BoolValue:
-			NewPinNames.Append(UDlgManager::GetDialoguesParticipantBoolNames(ParticipantName));
+			NewPinNames.Append(UDlgManager::GetDialoguesParticipantBoolNames(ParticipantTag));
 			break;
 
 		case EDlgDialogueCallback::NameValue:
-			NewPinNames.Append(UDlgManager::GetDialoguesParticipantFNameNames(ParticipantName));
+			NewPinNames.Append(UDlgManager::GetDialoguesParticipantFNameNames(ParticipantTag));
 			break;
 
 		default:

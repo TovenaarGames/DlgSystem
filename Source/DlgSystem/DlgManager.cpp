@@ -31,12 +31,12 @@ UDlgContext* UDlgManager::StartDialogueWithDefaultParticipants(UObject* WorldCon
 	}
 
 	// Create empty map of participants we need
-	TSet<FName> ParticipantSet = Dialogue->GetParticipantNames();
+	FGameplayTagContainer ParticipantTags = Dialogue->GetParticipantTags();
 	TArray<UObject*> Participants;
 
 	// Maps from Participant Name => Objects that have that participant name
-	TMap<FName, TArray<UObject*>> ObjectMap;
-	for (const FName& Name : ParticipantSet)
+	TMap<FGameplayTag, TArray<UObject*>> ObjectMap;
+	for (const FGameplayTag& Name : ParticipantTags)
 	{
 		ObjectMap.Add(Name, {});
 	}
@@ -44,10 +44,10 @@ UDlgContext* UDlgManager::StartDialogueWithDefaultParticipants(UObject* WorldCon
 	// Gather all objects that have our participant name
 	for (UObject* Participant : GetObjectsWithDialogueParticipantInterface(WorldContextObject))
 	{
-		const FName ParticipantName = IDlgDialogueParticipant::Execute_GetParticipantName(Participant);
-		if (ObjectMap.Contains(ParticipantName))
+		const FGameplayTag ParticipantTag = IDlgDialogueParticipant::Execute_GetParticipantTag(Participant);
+		if (ObjectMap.Contains(ParticipantTag))
 		{
-			ObjectMap[ParticipantName].AddUnique(Participant);
+			ObjectMap[ParticipantTag].AddUnique(Participant);
 			Participants.AddUnique(Participant);
 		}
 	}
@@ -57,18 +57,18 @@ UDlgContext* UDlgManager::StartDialogueWithDefaultParticipants(UObject* WorldCon
 	TArray<FString> DuplicatedNames;
 	for (const auto& Pair : ObjectMap)
 	{
-		const FName ParticipantName = Pair.Key;
+		const FGameplayTag ParticipantTag = Pair.Key;
 		const TArray<UObject*>& Objects = Pair.Value;
 
 		if (Objects.Num() == 0)
 		{
-			MissingNames.Add(ParticipantName.ToString());
+			MissingNames.Add(ParticipantTag.ToString());
 		}
 		else if (Objects.Num() > 1)
 		{
 			for (UObject* Obj : Objects)
 			{
-				DuplicatedNames.Add(Obj->GetName() + "(" + ParticipantName.ToString() + ")");
+				DuplicatedNames.Add(Obj->GetName() + "(" + ParticipantTag.ToString() + ")");
 			}
 		}
 	}
@@ -105,7 +105,7 @@ UDlgContext* UDlgManager::StartDialogueWithContext(const FString& ContextString,
 		? FString::Printf(TEXT("StartDialogue"))
 		: FString::Printf(TEXT("%s - StartDialogue"), *ContextString);
 
-	TMap<FName, UObject*> ParticipantBinding;
+	TMap<FGameplayTag, UObject*> ParticipantBinding;
 	if (!UDlgContext::ConvertArrayOfParticipantsToMap(ContextMessage, Dialogue, Participants, ParticipantBinding))
 	{
 		return nullptr;
@@ -122,7 +122,7 @@ UDlgContext* UDlgManager::StartDialogueWithContext(const FString& ContextString,
 
 bool UDlgManager::CanStartDialogue(UDlgDialogue* Dialogue, UPARAM(ref)const TArray<UObject*>& Participants)
 {
-	TMap<FName, UObject*> ParticipantBinding;
+	TMap<FGameplayTag, UObject*> ParticipantBinding;
 	if (!UDlgContext::ConvertArrayOfParticipantsToMap(TEXT("CanStartDialogue"), Dialogue, Participants, ParticipantBinding, false))
 	{
 		return false;
@@ -140,7 +140,7 @@ UDlgContext* UDlgManager::ResumeDialogueFromNodeIndex(
 )
 {
 	const FString ContextMessage = TEXT("ResumeDialogueFromNodeIndex");
-	TMap<FName, UObject*> ParticipantBinding;
+	TMap<FGameplayTag, UObject*> ParticipantBinding;
 	if (!UDlgContext::ConvertArrayOfParticipantsToMap(ContextMessage, Dialogue, Participants, ParticipantBinding))
 	{
 		return nullptr;
@@ -166,7 +166,7 @@ UDlgContext* UDlgManager::ResumeDialogueFromNodeGUID(
 )
 {
 	const FString ContextMessage = TEXT("ResumeDialogueFromNodeGUID");
-	TMap<FName, UObject*> ParticipantBinding;
+	TMap<FGameplayTag, UObject*> ParticipantBinding;
 	if (!UDlgContext::ConvertArrayOfParticipantsToMap(ContextMessage, Dialogue, Participants, ParticipantBinding))
 	{
 		return nullptr;
@@ -321,24 +321,24 @@ TArray<UObject*> UDlgManager::GetObjectsWithDialogueParticipantInterface(UObject
 	return Array;
 }
 
-TMap<FName, FDlgObjectsArray> UDlgManager::GetObjectsMapWithDialogueParticipantInterface(UObject* WorldContextObject)
+TMap<FGameplayTag, FDlgObjectsArray> UDlgManager::GetObjectsMapWithDialogueParticipantInterface(UObject* WorldContextObject)
 {
 	// Maps from Participant Name => Objects that have that participant name
-	TMap<FName, FDlgObjectsArray> ObjectsMap;
+	TMap<FGameplayTag, FDlgObjectsArray> ObjectsMap;
 	for (UObject* Participant : GetObjectsWithDialogueParticipantInterface(WorldContextObject))
 	{
-		const FName ParticipantName = IDlgDialogueParticipant::Execute_GetParticipantName(Participant);
-		if (ObjectsMap.Contains(ParticipantName))
+		const FGameplayTag ParticipantTag = IDlgDialogueParticipant::Execute_GetParticipantTag(Participant);
+		if (ObjectsMap.Contains(ParticipantTag))
 		{
 			// Update
-			ObjectsMap[ParticipantName].Array.Add(Participant);
+			ObjectsMap[ParticipantTag].Array.Add(Participant);
 		}
 		else
 		{
 			// Create
 			FDlgObjectsArray ArrayStruct;
 			ArrayStruct.Array.Add(Participant);
-			ObjectsMap.Add(ParticipantName, ArrayStruct);
+			ObjectsMap.Add(ParticipantTag, ArrayStruct);
 		}
 	}
 
@@ -431,12 +431,12 @@ bool UDlgManager::IsObjectANodeData(const UObject* Object)
 	return FDlgHelper::IsObjectAChildOf(Object, UDlgNodeData::StaticClass());
 }
 
-TArray<UDlgDialogue*> UDlgManager::GetAllDialoguesForParticipantName(FName ParticipantName)
+TArray<UDlgDialogue*> UDlgManager::GetAllDialoguesForParticipantName(const FGameplayTag& ParticipantTag)
 {
 	TArray<UDlgDialogue*> DialoguesArray;
 	for (UDlgDialogue* Dialogue : GetAllDialoguesFromMemory())
 	{
-		if (Dialogue->HasParticipant(ParticipantName))
+		if (Dialogue->HasParticipant(ParticipantTag))
 		{
 			DialoguesArray.Add(Dialogue);
 		}
@@ -445,16 +445,19 @@ TArray<UDlgDialogue*> UDlgManager::GetAllDialoguesForParticipantName(FName Parti
 	return DialoguesArray;
 }
 
-TArray<FName> UDlgManager::GetDialoguesParticipantNames()
+TArray<FGameplayTag> UDlgManager::GetDialoguesParticipantTags()
 {
-	TSet<FName> UniqueNames;
+	TSet<FGameplayTag> UniqueTags;
 	for (const UDlgDialogue* Dialogue : GetAllDialoguesFromMemory())
 	{
-		UniqueNames.Append(Dialogue->GetParticipantNames());
+		for (const FGameplayTag& tag : Dialogue->GetParticipantTags())
+		{
+			UniqueTags.Add(tag);
+		}
 	}
 
-	TArray<FName> Array;
-	FDlgHelper::AppendSortedSetToArray(UniqueNames, Array);
+	TArray<FGameplayTag> Array;
+	FDlgHelper::AppendSortedTagSetToArray(UniqueTags, Array);
 	return Array;
 }
 
@@ -467,85 +470,85 @@ TArray<FName> UDlgManager::GetDialoguesSpeakerStates()
 	}
 
 	TArray<FName> Array;
-	FDlgHelper::AppendSortedSetToArray(UniqueNames, Array);
+	FDlgHelper::AppendSortedFNameSetToArray(UniqueNames, Array);
 	return Array;
 }
 
-TArray<FName> UDlgManager::GetDialoguesParticipantIntNames(FName ParticipantName)
+TArray<FName> UDlgManager::GetDialoguesParticipantIntNames(const FGameplayTag& ParticipantTag)
 {
 	TSet<FName> UniqueNames;
 	for (const UDlgDialogue* Dialogue : GetAllDialoguesFromMemory())
 	{
-		UniqueNames.Append(Dialogue->GetParticipantIntNames(ParticipantName));
+		UniqueNames.Append(Dialogue->GetParticipantIntNames(ParticipantTag));
 	}
 
 	TArray<FName> Array;
-	FDlgHelper::AppendSortedSetToArray(UniqueNames, Array);
+	FDlgHelper::AppendSortedFNameSetToArray(UniqueNames, Array);
 	return Array;
 }
 
-TArray<FName> UDlgManager::GetDialoguesParticipantFloatNames(FName ParticipantName)
+TArray<FName> UDlgManager::GetDialoguesParticipantFloatNames(const FGameplayTag& ParticipantTag)
 {
 	TSet<FName> UniqueNames;
 	for (const UDlgDialogue* Dialogue : GetAllDialoguesFromMemory())
 	{
-		UniqueNames.Append(Dialogue->GetParticipantFloatNames(ParticipantName));
+		UniqueNames.Append(Dialogue->GetParticipantFloatNames(ParticipantTag));
 	}
 
 	TArray<FName> Array;
-	FDlgHelper::AppendSortedSetToArray(UniqueNames, Array);
+	FDlgHelper::AppendSortedFNameSetToArray(UniqueNames, Array);
 	return Array;
 }
 
-TArray<FName> UDlgManager::GetDialoguesParticipantBoolNames(FName ParticipantName)
+TArray<FName> UDlgManager::GetDialoguesParticipantBoolNames(const FGameplayTag& ParticipantTag)
 {
 	TSet<FName> UniqueNames;
 	for (const UDlgDialogue* Dialogue : GetAllDialoguesFromMemory())
 	{
-		UniqueNames.Append(Dialogue->GetParticipantBoolNames(ParticipantName));
+		UniqueNames.Append(Dialogue->GetParticipantBoolNames(ParticipantTag));
 	}
 
 	TArray<FName> Array;
-	FDlgHelper::AppendSortedSetToArray(UniqueNames, Array);
+	FDlgHelper::AppendSortedFNameSetToArray(UniqueNames, Array);
 	return Array;
 }
 
-TArray<FName> UDlgManager::GetDialoguesParticipantFNameNames(FName ParticipantName)
+TArray<FName> UDlgManager::GetDialoguesParticipantFNameNames(const FGameplayTag& ParticipantTag)
 {
 	TSet<FName> UniqueNames;
 	for (const UDlgDialogue* Dialogue : GetAllDialoguesFromMemory())
 	{
-		UniqueNames.Append(Dialogue->GetParticipantFNameNames(ParticipantName));
+		UniqueNames.Append(Dialogue->GetParticipantFNameNames(ParticipantTag));
 	}
 
 	TArray<FName> Array;
-	FDlgHelper::AppendSortedSetToArray(UniqueNames, Array);
+	FDlgHelper::AppendSortedFNameSetToArray(UniqueNames, Array);
 	return Array;
 }
 
-TArray<FName> UDlgManager::GetDialoguesParticipantConditionNames(FName ParticipantName)
+TArray<FName> UDlgManager::GetDialoguesParticipantConditionNames(const FGameplayTag& ParticipantTag)
 {
 	TSet<FName> UniqueNames;
 	for (const UDlgDialogue* Dialogue : GetAllDialoguesFromMemory())
 	{
-		UniqueNames.Append(Dialogue->GetParticipantConditionNames(ParticipantName));
+		UniqueNames.Append(Dialogue->GetParticipantConditionNames(ParticipantTag));
 	}
 
 	TArray<FName> Array;
-	FDlgHelper::AppendSortedSetToArray(UniqueNames, Array);
+	FDlgHelper::AppendSortedFNameSetToArray(UniqueNames, Array);
 	return Array;
 }
 
-TArray<FName> UDlgManager::GetDialoguesParticipantEventNames(FName ParticipantName)
+TArray<FName> UDlgManager::GetDialoguesParticipantEventNames(const FGameplayTag& ParticipantTag)
 {
 	TSet<FName> UniqueNames;
 	for (const UDlgDialogue* Dialogue : GetAllDialoguesFromMemory())
 	{
-		UniqueNames.Append(Dialogue->GetParticipantEventNames(ParticipantName));
+		UniqueNames.Append(Dialogue->GetParticipantEventNames(ParticipantTag));
 	}
 
 	TArray<FName> Array;
-	FDlgHelper::AppendSortedSetToArray(UniqueNames, Array);
+	FDlgHelper::AppendSortedFNameSetToArray(UniqueNames, Array);
 	return Array;
 }
 

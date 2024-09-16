@@ -79,18 +79,18 @@ bool FDlgSearchManager::QueryDlgTextArgument(
 		);
 	}
 
-	// Test ParticipantName
-	if (!InDlgTextArgument.ParticipantName.IsNone() &&
-		InDlgTextArgument.ParticipantName.ToString().Contains(SearchFilter.SearchString))
+	// Test ParticipantTag
+	if (InDlgTextArgument.ParticipantTag.IsValid() &&
+		InDlgTextArgument.ParticipantTag.ToString().Contains(SearchFilter.SearchString))
 	{
 		bContainsSearchString = true;
 		const FText Category = FText::Format(
-			LOCTEXT("DlgTextArgumentParticipantName", "TextArgument.ParticipantName at index = {0}"),
+			LOCTEXT("DlgTextArgumentParticipantTag", "TextArgument.ParticipantTag at index = {0}"),
 			FText::AsNumber(ArgumentIndex)
 		);
 		MakeChildTextNode(
 			OutParentNode,
-			FText::FromName(InDlgTextArgument.ParticipantName),
+			FText::FromString(InDlgTextArgument.ParticipantTag.ToString()),
 			Category,
 			Category.ToString()
 		);
@@ -151,17 +151,17 @@ bool FDlgSearchManager::QueryDlgCondition(
 	bool bContainsSearchString = false;
 
 	// Test ParticipantName
-	if (!InDlgCondition.ParticipantName.IsNone() &&
-		InDlgCondition.ParticipantName.ToString().Contains(SearchFilter.SearchString))
+	if (InDlgCondition.ParticipantTag.IsValid() &&
+		InDlgCondition.ParticipantTag.ToString().Contains(SearchFilter.SearchString))
 	{
 		bContainsSearchString = true;
 		const FText Category = FText::Format(
-			LOCTEXT("DlgConditionParticipantName", "{0}.ParticipantName at index = {1}"),
+			LOCTEXT("DlgConditionParticipantTag", "{0}.ParticipantTag at index = {1}"),
 		 	 FText::FromName(ConditionMemberName), FText::AsNumber(ConditionIndex)
 		);
 		MakeChildTextNode(
 			OutParentNode,
-			FText::FromName(InDlgCondition.ParticipantName),
+			FText::FromString(InDlgCondition.ParticipantTag.ToString()),
 			Category,
 			Category.ToString()
 		);
@@ -202,17 +202,17 @@ bool FDlgSearchManager::QueryDlgCondition(
 	}
 
 	// Test OtherParticipantName
-	if (!InDlgCondition.OtherParticipantName.IsNone() &&
-		InDlgCondition.OtherParticipantName.ToString().Contains(SearchFilter.SearchString))
+	if (InDlgCondition.OtherParticipantTag.IsValid() &&
+		InDlgCondition.OtherParticipantTag.ToString().Contains(SearchFilter.SearchString))
 	{
 		bContainsSearchString = true;
 		const FText Category = FText::Format(
-			LOCTEXT("DlgConditionOtherParticipantName", "{0}.OtherParticipantName at index = {1}"),
+			LOCTEXT("DlgConditionOtherParticipantTag", "{0}.OtherParticipantTag at index = {1}"),
 			FText::FromName(ConditionMemberName), FText::AsNumber(ConditionIndex)
 		);
 		MakeChildTextNode(
 			OutParentNode,
-			FText::FromName(InDlgCondition.OtherParticipantName),
+			FText::FromString(InDlgCondition.OtherParticipantTag.ToString()),
 			Category,
 			Category.ToString()
 		);
@@ -330,17 +330,17 @@ bool FDlgSearchManager::QueryDlgEvent(
 	bool bContainsSearchString = false;
 
 	// Test ParticipantName
-	if (!InDlgEvent.ParticipantName.IsNone() &&
-		InDlgEvent.ParticipantName.ToString().Contains(SearchFilter.SearchString))
+	if (InDlgEvent.ParticipantTag.IsValid() &&
+		InDlgEvent.ParticipantTag.ToString().Contains(SearchFilter.SearchString))
 	{
 		bContainsSearchString = true;
 		const FText Category = FText::Format(
-			LOCTEXT("DlgEventParticipantName", "{0}.ParticipantName at index = {1}"),
+			LOCTEXT("DlgEventParticipantTag", "{0}.ParticipantTag at index = {1}"),
 			FText::FromName(EventMemberName), FText::AsNumber(EventIndex)
 		);
 		MakeChildTextNode(
 			OutParentNode,
-			FText::FromName(InDlgEvent.ParticipantName),
+			FText::FromString(InDlgEvent.ParticipantTag.ToString()),
 			Category,
 			Category.ToString()
 		);
@@ -562,13 +562,13 @@ bool FDlgSearchManager::QueryGraphNode(
 	}
 
 	// Test the ParticipantName
-	if (Node.GetNodeParticipantName().ToString().Contains(SearchFilter.SearchString))
+	if (Node.GetNodeParticipantTag().ToString().Contains(SearchFilter.SearchString))
 	{
 		bContainsSearchString = true;
 		MakeChildTextNode(
 			TreeGraphNode,
-			FText::FromName(Node.GetNodeParticipantName()),
-			LOCTEXT("ParticipantNameKey", "Participant Name"),
+			FText::FromString(Node.GetNodeParticipantTag().ToString()),
+			LOCTEXT("ParticipantTagKey", "Participant Tag"),
 			TEXT("Participant Name")
 		);
 	}
@@ -682,11 +682,11 @@ bool FDlgSearchManager::QueryGraphNode(
 			const FDlgSpeechSequenceEntry& SequenceEntry = SpeechSequenceArray[Index];
 
 			// Test Speaker
-			if (SequenceEntry.Speaker.ToString().Contains(SearchFilter.SearchString))
+			if (SequenceEntry.SpeakerTag.ToString().Contains(SearchFilter.SearchString))
 			{
 				bContainsSearchString = true;
-				const FText Category = FText::Format(LOCTEXT("SequenceEntrySpeaker", "SequenceEntry.Speaker at index = {0}"), FText::AsNumber(Index));
-				MakeChildTextNode(TreeGraphNode, FText::FromName(SequenceEntry.Speaker), Category, Category.ToString());
+				const FText Category = FText::Format(LOCTEXT("SequenceEntrySpeaker", "SequenceEntry.SpeakerTag at index = {0}"), FText::AsNumber(Index));
+				MakeChildTextNode(TreeGraphNode, FText::FromString(SequenceEntry.SpeakerTag.ToString()), Category, Category.ToString());
 			}
 
 			// Test Text Description

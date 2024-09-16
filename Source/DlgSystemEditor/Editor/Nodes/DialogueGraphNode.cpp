@@ -14,6 +14,7 @@
 
 #include "DlgSystemEditor/DlgSystemEditorModule.h"
 #include "DlgSystem/DlgDialogue.h"
+#include "DlgSystem/DlgHelper.h"
 #include "DialogueGraphNode_Edge.h"
 #include "DlgSystemEditor/DlgCommands.h"
 #include "DlgSystem/DlgSystemSettings.h"
@@ -115,7 +116,7 @@ FText UDialogueGraphNode::GetNodeTitle(ENodeTitleType::Type TitleType) const
 		}
 	}
 
-	const FString FullString = DialogueNode->GetNodeParticipantName().ToString();
+	const FString FullString = UBSDlgFunctions::GetParticipantLeafTag(DialogueNode->GetNodeParticipantTag());
 	// Display the full title
 	return FText::FromString(FullString);
 }
@@ -150,7 +151,7 @@ FString UDialogueGraphNode::GetDocumentationExcerptName() const
 FText UDialogueGraphNode::GetTooltipText() const
 {
 	FFormatNamedArguments Args;
-	Args.Add(TEXT("ParticipantName"), DialogueNode ? FText::FromName(DialogueNode->GetNodeParticipantName()) : FText::GetEmpty());
+	Args.Add(TEXT("ParticipantTag"), DialogueNode ? FText::FromString(DialogueNode->GetNodeParticipantTag().ToString()) : FText::GetEmpty());
 	Args.Add(TEXT("NodeType"), DialogueNode ? FText::FromString(DialogueNode->GetNodeTypeString()) : FText::GetEmpty());
 	Args.Add(TEXT("Description"), DialogueNode ? FText::FromString(DialogueNode->GetDesc()) : FText::GetEmpty());
 	return FText::Format(LOCTEXT("GraphNodeTooltip", "ParticipantName = {ParticipantName}\nType = {NodeType}\n{Description}"), Args);

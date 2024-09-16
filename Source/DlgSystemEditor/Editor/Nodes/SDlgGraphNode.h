@@ -10,6 +10,8 @@
 #include "DialogueGraphNode.h"
 #include "SDlgGraphNode_Base.h"
 
+#include "DlgSystem/DlgHelper.h"
+
 class SVerticalBox;
 
 /**
@@ -141,7 +143,7 @@ protected:
 	{
 		if (DialogueGraphNode && DialogueGraphNode->IsSpeechSequenceNode())
 		{
-			return FText::FromName(GetSpeechSequenceEntries()[SpeechEntryIndex].Speaker);
+			return FText::FromString(UBSDlgFunctions::GetParticipantLeafTag(GetSpeechSequenceEntries()[SpeechEntryIndex].SpeakerTag));
 		}
 
 		return FText::GetEmpty();

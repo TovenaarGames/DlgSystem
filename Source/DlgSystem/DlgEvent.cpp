@@ -79,7 +79,7 @@ void FDlgEvent::Call(UDlgContext& Context, const FString& ContextString, UObject
 
 FString FDlgEvent::GetEditorDisplayString(UDlgDialogue* OwnerDialogue) const
 {
-	const FString TargetPreFix = (ParticipantName != NAME_None) ? (FString(TEXT("[")) + ParticipantName.ToString() + FString(TEXT("] "))) : TEXT("");
+	const FString TargetPreFix = UBSDlgFunctions::IsValidParticipantTag(ParticipantTag) ? (FString(TEXT("[")) + UBSDlgFunctions::GetParticipantLeafTag(ParticipantTag) + FString(TEXT("] "))) : TEXT("");
 
 	auto GetSignCharIfNegative = [](auto Number) -> FString
 	{
@@ -132,7 +132,7 @@ FString FDlgEvent::GetEditorDisplayString(UDlgDialogue* OwnerDialogue) const
 			return TargetPreFix + TEXT("C ") + EventName.ToString() + TEXT(" = ") + NameValue.ToString();
 
 		case EDlgEventType::Custom:
-			return CustomEvent == nullptr ? TEXT("Invalid") : CustomEvent->GetEditorDisplayString(OwnerDialogue, ParticipantName);
+			return CustomEvent == nullptr ? TEXT("Invalid") : CustomEvent->GetEditorDisplayString(OwnerDialogue, ParticipantTag);
 
 		case EDlgEventType::UnrealFunction:
 			return TargetPreFix + TEXT("Call Function ") + EventName.ToString();
@@ -152,15 +152,15 @@ bool FDlgEvent::ValidateIsParticipantValid(const UDlgContext& Context, const FSt
 	if (MustHaveParticipant())
 	{
 		FDlgLogger::Get().Errorf(
-			TEXT("%s - Event FAILED because the PARTICIPANT is INVALID. \nContext:\n\t%s, \n\tParticipantName = %s, EventType = %s, EventName = %s, CustomEvent = %s"),
-			*ContextString, *Context.GetContextString(), *ParticipantName.ToString(), *EventTypeToString(EventType), *EventName.ToString(), *GetCustomEventName()
+			TEXT("%s - Event FAILED because the PARTICIPANT is INVALID. \nContext:\n\t%s, \n\tParticipantTag = %s, EventType = %s, EventName = %s, CustomEvent = %s"),
+			*ContextString, *Context.GetContextString(), *ParticipantTag.ToString(), *EventTypeToString(EventType), *EventName.ToString(), *GetCustomEventName()
 		);
 	}
 	else
 	{
 		FDlgLogger::Get().Warningf(
-			TEXT("%s - Event WARNING because the PARTICIPANT is INVALID. The call will NOT FAIL, but the participant is not present. \nContext:\n\t%s, \n\tParticipantName = %s, EventType = %s, EventName = %s, CustomEvent = %s"),
-			*ContextString, *Context.GetContextString(), *ParticipantName.ToString(), *EventTypeToString(EventType), *EventName.ToString(), *GetCustomEventName()
+			TEXT("%s - Event WARNING because the PARTICIPANT is INVALID. The call will NOT FAIL, but the participant is not present. \nContext:\n\t%s, \n\tParticipantTag = %s, EventType = %s, EventName = %s, CustomEvent = %s"),
+			*ContextString, *Context.GetContextString(), *ParticipantTag.ToString(), *EventTypeToString(EventType), *EventName.ToString(), *GetCustomEventName()
 		);
 	}
 

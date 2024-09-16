@@ -171,10 +171,10 @@ public:
 	static TArray<UObject*> GetObjectsWithDialogueParticipantInterface(UObject* WorldContextObject);
 
 	// Same as GetObjectsWithDialogueParticipantInterface but groups the Objects into a Map
-	// Where the Key is the Participant Name
+	// Where the Key is the Participant Tag
 	// and the Value is the Participants Array
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Helper", meta = (WorldContext = "WorldContextObject"))
-	static TMap<FName, FDlgObjectsArray> GetObjectsMapWithDialogueParticipantInterface(UObject* WorldContextObject);
+	static TMap<FGameplayTag, FDlgObjectsArray> GetObjectsMapWithDialogueParticipantInterface(UObject* WorldContextObject);
 
 	// Gets all the dialogues that have a duplicate GUID, should not happen, like ever.
 	static TArray<UDlgDialogue*> GetDialoguesWithDuplicateGUIDs();
@@ -182,8 +182,8 @@ public:
 	// Helper methods that gets all the dialogues in a map by guid.
 	static TMap<FGuid, UDlgDialogue*> GetAllDialoguesGUIDsMap();
 
-	// Gets all the loaded dialogues from memory that have the ParticipantName included inside them.
-	static TArray<UDlgDialogue*> GetAllDialoguesForParticipantName(FName ParticipantName);
+	// Gets all the loaded dialogues from memory that have the ParticipantTag included inside them.
+	static TArray<UDlgDialogue*> GetAllDialoguesForParticipantName(const FGameplayTag& ParticipantTag);
 
 	// Sets the FDlgMemory Dialogue history.
 	UFUNCTION(BlueprintCallable, Category = "Dialogue|Memory")
@@ -217,43 +217,43 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Helper", DisplayName = "Is Object A Node Data")
 	static bool IsObjectANodeData(const UObject* Object);
 
-	// Gets all the unique participant names sorted alphabetically from all the Dialogues loaded into memory.
+	// Gets all the unique participant tags sorted alphabetically from all the Dialogues loaded into memory.
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Data")
-	static TArray<FName> GetDialoguesParticipantNames();
+	static TArray<FGameplayTag> GetDialoguesParticipantTags();
 
 	// Gets all the used speaker states sorted alphabetically from all the Dialogues loaded into memory.
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Data")
 	static TArray<FName> GetDialoguesSpeakerStates();
 
-	// Gets all the unique int variable names sorted alphabetically for the specified ParticipantName from the loaded Dialogues
+	// Gets all the unique int variable names sorted alphabetically for the specified ParticipantTag from the loaded Dialogues
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Data")
-	static TArray<FName> GetDialoguesParticipantIntNames(FName ParticipantName);
+	static TArray<FName> GetDialoguesParticipantIntNames(const FGameplayTag& ParticipantTag);
 
-	// Gets all the unique float variable names sorted alphabetically for the specified ParticipantName from the loaded Dialogues
+	// Gets all the unique float variable names sorted alphabetically for the specified ParticipantTag from the loaded Dialogues
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Data")
-	static TArray<FName> GetDialoguesParticipantFloatNames(FName ParticipantName);
+	static TArray<FName> GetDialoguesParticipantFloatNames(const FGameplayTag& ParticipantTag);
 
 	// Gets all the unique bool variable names sorted alphabetically for the specified ParticipantName from the loaded Dialogues
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Data")
-	static TArray<FName> GetDialoguesParticipantBoolNames(FName ParticipantName);
+	static TArray<FName> GetDialoguesParticipantBoolNames(const FGameplayTag& ParticipantTag);
 
-	// Gets all the unique name variable names sorted alphabetically for the specified ParticipantName from the loaded Dialogues
+	// Gets all the unique name variable names sorted alphabetically for the specified ParticipantTag from the loaded Dialogues
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Data")
-	static TArray<FName> GetDialoguesParticipantFNameNames(FName ParticipantName);
+	static TArray<FName> GetDialoguesParticipantFNameNames(const FGameplayTag& ParticipantTag);
 
-	// Gets all the unique condition names sorted alphabetically for the specified ParticipantName from the loaded Dialogues
+	// Gets all the unique condition names sorted alphabetically for the specified ParticipantTag from the loaded Dialogues
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Data")
-	static TArray<FName> GetDialoguesParticipantConditionNames(FName ParticipantName);
+	static TArray<FName> GetDialoguesParticipantConditionNames(const FGameplayTag& ParticipantTag);
 
 	// Gets all the unique event names sorted alphabetically for the specified ParticipantName from the loaded Dialogues
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Data")
-	static TArray<FName> GetDialoguesParticipantEventNames(FName ParticipantName);
+	static TArray<FName> GetDialoguesParticipantEventNames(const FGameplayTag& ParticipantTag);
 
 	UE_DEPRECATED(4.24, "GetAllDialoguesParticipantNames has been deprecated in favour of GetDialoguesParticipantNames")
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Data", meta = (DeprecatedFunction, DeprecationMessage = "GetAllDialoguesParticipantNames has been deprecated in favour of GetDialoguesParticipantNames"))
-	static void GetAllDialoguesParticipantNames(TArray<FName>& OutArray)
+	static void GetAllDialoguesParticipantTags(TArray<FGameplayTag>& OutArray)
 	{
-		OutArray.Append(GetDialoguesParticipantNames());
+		OutArray.Append(GetDialoguesParticipantTags());
 	}
 
 	UE_DEPRECATED(4.24, "GetAllDialoguesSpeakerStates has been deprecated in favour of GetDialoguesSpeakerStates")
@@ -265,44 +265,44 @@ public:
 
 	UE_DEPRECATED(4.24, "GetAllDialoguesIntNames has been deprecated in favour of GetDialoguesParticipantIntNames")
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Data", meta = (DeprecatedFunction, DeprecationMessage = "GetAllDialoguesIntNames has been deprecated in favour of GetDialoguesParticipantIntNames"))
-	static void GetAllDialoguesIntNames(FName ParticipantName, TArray<FName>& OutArray)
+	static void GetAllDialoguesIntNames(const FGameplayTag& ParticipantTag, TArray<FName>& OutArray)
 	{
-		OutArray.Append(GetDialoguesParticipantIntNames(ParticipantName));
+		OutArray.Append(GetDialoguesParticipantIntNames(ParticipantTag));
 	}
 
 	UE_DEPRECATED(4.24, "GetAllDialoguesFloatNames has been deprecated in favour of GetDialoguesParticipantFloatNames")
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Data", meta = (DeprecatedFunction, DeprecationMessage = "GetAllDialoguesFloatNames has been deprecated in favour of GetDialoguesParticipantFloatNames"))
-	static void GetAllDialoguesFloatNames(FName ParticipantName, TArray<FName>& OutArray)
+	static void GetAllDialoguesFloatNames(const FGameplayTag& ParticipantTag, TArray<FName>& OutArray)
 	{
-		OutArray.Append(GetDialoguesParticipantFloatNames(ParticipantName));
+		OutArray.Append(GetDialoguesParticipantFloatNames(ParticipantTag));
 	}
 
 	UE_DEPRECATED(4.24, "GetAllDialoguesBoolNames has been deprecated in favour of GetDialoguesParticipantBoolNames")
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Data", meta = (DeprecatedFunction, DeprecationMessage = "GetAllDialoguesBoolNames has been deprecated in favour of GetDialoguesParticipantBoolNames"))
-	static void GetAllDialoguesBoolNames(FName ParticipantName, TArray<FName>& OutArray)
+	static void GetAllDialoguesBoolNames(const FGameplayTag& ParticipantTag, TArray<FName>& OutArray)
 	{
-		OutArray.Append(GetDialoguesParticipantBoolNames(ParticipantName));
+		OutArray.Append(GetDialoguesParticipantBoolNames(ParticipantTag));
 	}
 
 	UE_DEPRECATED(4.24, "GetAllDialoguesNameNames has been deprecated in favour of GetDialoguesParticipantFNameNames")
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Data", meta = (DeprecatedFunction, DeprecationMessage = "GetAllDialoguesNameNames has been deprecated in favour of GetDialoguesParticipantFNameNames"))
-	static void GetAllDialoguesNameNames(FName ParticipantName, TArray<FName>& OutArray)
+	static void GetAllDialoguesNameNames(const FGameplayTag ParticipantTag, TArray<FName>& OutArray)
 	{
-		OutArray.Append(GetDialoguesParticipantFNameNames(ParticipantName));
+		OutArray.Append(GetDialoguesParticipantFNameNames(ParticipantTag));
 	}
 
 	UE_DEPRECATED(4.24, "GetAllDialoguesConditionNames has been deprecated in favour of GetDialoguesParticipantConditionNames")
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Data", meta = (DeprecatedFunction, DeprecationMessage = "GetAllDialoguesConditionNames has been deprecated in favour of GetDialoguesParticipantConditionNames"))
-	static void GetAllDialoguesConditionNames(FName ParticipantName, TArray<FName>& OutArray)
+	static void GetAllDialoguesConditionNames(const FGameplayTag& ParticipantTag, TArray<FName>& OutArray)
 	{
-		OutArray.Append(GetDialoguesParticipantConditionNames(ParticipantName));
+		OutArray.Append(GetDialoguesParticipantConditionNames(ParticipantTag));
 	}
 
 	UE_DEPRECATED(4.24, "GetAllDialoguesEventNames has been deprecated in favour of GetDialoguesParticipantEventNames")
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Data", meta = (DeprecatedFunction, DeprecationMessage = "GetAllDialoguesEventNames has been deprecated in favour of GetDialoguesParticipantEventNames"))
-	static void GetAllDialoguesEventNames(FName ParticipantName, TArray<FName>& OutArray)
+	static void GetAllDialoguesEventNames(const FGameplayTag& ParticipantTag, TArray<FName>& OutArray)
 	{
-		OutArray.Append(GetDialoguesParticipantEventNames(ParticipantName));
+		OutArray.Append(GetDialoguesParticipantEventNames(ParticipantTag));
 	}
 
 	// Registers all the DlgSystem Module console commands.

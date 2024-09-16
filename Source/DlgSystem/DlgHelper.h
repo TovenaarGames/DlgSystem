@@ -7,6 +7,7 @@
 #include "UObject/UnrealType.h"
 #include "UObject/ObjectMacros.h"
 #include <functional>
+#include "GameplayTagContainer.h"
 
 #include "DlgCondition.h"
 #include "DlgEvent.h"
@@ -268,9 +269,9 @@ public:
 	static bool GetAllClassesImplementingInterface(const UClass* InterfaceClass, TArray<UClass*>& OutNativeClasses, TArray<UClass*>& OutBlueprintClasses);
 
 	// Converts the Classes Array that represent the Dialogue Participants into a map where
-	// Key: The participant Name
+	// Key: The participant tag
 	// Value: An array of structs that contain the class and the object for that participant name
-	static TMap<FName, TArray<FDlgClassAndObject>> ConvertDialogueParticipantsClassesIntoMap(const TArray<UClass*>& Classes);
+	static TMap<FGameplayTag, TArray<FDlgClassAndObject>> ConvertDialogueParticipantsClassesIntoMap(const TArray<UClass*>& Classes);
 
 	// FileSystem
 	static bool DeleteFile(const FString& PathName, bool bVerbose = true);
@@ -454,27 +455,56 @@ public:
 		return A.Compare(B) < 0;
 	}
 
-	/** Default sorting function used by all the Dialogue related methods. Sorts alphabetically ascending. */
-	static void SortDefault(TArray<FName>& OutArray)
+	static bool PredicateSortFGameplayTagAlphabeticallyAscending(const FGameplayTag& A, const FGameplayTag& B)
+	{
+		return A.ToString().Compare(B.ToString()) < 0;
+	}
+
+	/** Default sorting function used by all the Dialogue related methods. Sorts tag alphabetically ascending. */
+	static void SortTagDefault(TArray<FGameplayTag>& OutArray)
+	{
+		OutArray.Sort(PredicateSortFGameplayTagAlphabeticallyAscending);
+	}
+	static void SortTagDefault(TSet<FGameplayTag>& OutSet)
+	{
+		OutSet.Sort(PredicateSortFGameplayTagAlphabeticallyAscending);
+	}
+
+	template<typename ValueType>
+	static void SortTagDefault(TMap<FGameplayTag, ValueType>& Map)
+	{
+		Map.KeySort(PredicateSortFGameplayTagAlphabeticallyAscending);
+	}
+
+	/** Default sorting function used by all the Dialogue related methods. Sorts FName alphabetically ascending. */
+	static void SortFNameDefault(TArray<FName>& OutArray)
 	{
 		OutArray.Sort(PredicateSortFNameAlphabeticallyAscending);
 	}
-	static void SortDefault(TSet<FName>& OutSet)
+	static void SortFNameDefault(TSet<FName>& OutSet)
 	{
 		OutSet.Sort(PredicateSortFNameAlphabeticallyAscending);
 	}
 
 	template<typename ValueType>
-	static void SortDefault(TMap<FName, ValueType>& Map)
+	static void SortFNameDefault(TMap<FName, ValueType>& Map)
 	{
 		Map.KeySort(PredicateSortFNameAlphabeticallyAscending);
 	}
 
+	/** Helper method, used to append a tag set to an array. Also sort. */
+	static void AppendSortedTagSetToArray(const TSet<FGameplayTag>& InSet, TArray<FGameplayTag>& OutArray)
+	{
+		TArray<FGameplayTag> UniqueTagsArray = InSet.Array();
+		SortTagDefault(UniqueTagsArray);
+		OutArray.Append(UniqueTagsArray);
+	}
+
 	/** Helper method, used to append a set to an array. Also sort. */
-	static void AppendSortedSetToArray(const TSet<FName>& InSet, TArray<FName>& OutArray)
+	static void AppendSortedFNameSetToArray(const TSet<FName>& InSet, TArray<FName>& OutArray)
 	{
 		TArray<FName> UniqueNamesArray = InSet.Array();
-		SortDefault(UniqueNamesArray);
+		SortFNameDefault(UniqueNamesArray);
 		OutArray.Append(UniqueNamesArray);
 	}
 
@@ -540,4 +570,24 @@ public:
 
 		return IsValid(Object);
 	}
+};
+
+/*
+* Helper functions for the item types
+*/
+UCLASS()
+class DLGSYSTEM_API UBSDlgFunctions : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+	/** Returns true if tag is a valid participant tag.
+	* @param Tag: the tag which is validated.
+	*/
+	UFUNCTION(BlueprintCallable)
+	static bool IsValidParticipantTag(const FGameplayTag& ParticipantTag);
+
+	/** Returns only the last part of the gameplay tag as a string.*/
+	UFUNCTION(BlueprintCallable)
+	static FString GetParticipantLeafTag(const FGameplayTag& ParticipantTag);
 };

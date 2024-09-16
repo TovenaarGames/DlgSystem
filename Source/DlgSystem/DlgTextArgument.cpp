@@ -10,16 +10,16 @@
 #include "NYReflectionHelper.h"
 #include "Logging/DlgLogger.h"
 
-FFormatArgumentValue FDlgTextArgument::ConstructFormatArgumentValue(const UDlgContext& Context, FName NodeOwner) const
+FFormatArgumentValue FDlgTextArgument::ConstructFormatArgumentValue(const UDlgContext& Context, const FGameplayTag& NodeOwner) const
 {
 	// If participant name is not valid we use the node owner name
-	const FName ValidParticipantName = ParticipantName == NAME_None ? NodeOwner : ParticipantName;
-	const UObject* Participant = Context.GetParticipant(ValidParticipantName);
+	const FGameplayTag ValidParticipantTag = !UBSDlgFunctions::IsValidParticipantTag(ParticipantTag)? NodeOwner : ParticipantTag;
+	const UObject* Participant = Context.GetParticipant(ValidParticipantTag);
 	if (Participant == nullptr)
 	{
 		FDlgLogger::Get().Errorf(
 			TEXT("FAILED to construct text argument because the PARTICIPANT is INVALID (Supplied Participant = %s). \nContext:\n\t%s, DisplayString = %s, ParticipantName = %s, ArgumentType = %s"),
-			*ValidParticipantName.ToString(), *Context.GetContextString(), *DisplayString, *ParticipantName.ToString(), *ArgumentTypeToString(Type)
+			*ValidParticipantTag.ToString(), *Context.GetContextString(), *DisplayString, *ValidParticipantTag.ToString(), *ArgumentTypeToString(Type)
 		);
 		return FFormatArgumentValue(FText::FromString(TEXT("[CustomTextArgument is INVALID. Missing Participant. Check log]")));
 	}

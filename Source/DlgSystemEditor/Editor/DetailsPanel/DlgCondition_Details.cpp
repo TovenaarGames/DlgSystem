@@ -28,13 +28,13 @@ void FDlgCondition_Details::CustomizeHeader(TSharedRef<IPropertyHandle> InStruct
 	PropertyUtils = StructCustomizationUtils.GetPropertyUtilities();
 
 	// Cache the Property Handle for some properties
-	ParticipantNamePropertyHandle = StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgCondition, ParticipantName));
-	OtherParticipantNamePropertyHandle = StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgCondition, OtherParticipantName));
+	ParticipantTagPropertyHandle = StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgCondition, ParticipantTag));
+	OtherParticipantTagPropertyHandle = StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgCondition, OtherParticipantTag));
 	ConditionTypePropertyHandle = StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgCondition, ConditionType));
 	CompareTypePropertyHandle = StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgCondition, CompareType));
 	IntValuePropertyHandle = StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgCondition, IntValue));
-	check(ParticipantNamePropertyHandle.IsValid());
-	check(OtherParticipantNamePropertyHandle.IsValid());
+	check(ParticipantTagPropertyHandle.IsValid());
+	check(OtherParticipantTagPropertyHandle.IsValid());
 	check(ConditionTypePropertyHandle.IsValid());
 	check(CompareTypePropertyHandle.IsValid());
 	check(IntValuePropertyHandle.IsValid());
@@ -72,28 +72,24 @@ void FDlgCondition_Details::CustomizeChildren(
 		ConditionTypePropertyRow_CustomDisplay = MakeShared<FDlgEnumTypeWithObject_CustomRowHelper>(
 			ConditionTypePropertyRow,
 			Dialogue,
-			ParticipantNamePropertyHandle
+			ParticipantTagPropertyHandle
 		);
 		ConditionTypePropertyRow_CustomDisplay->SetEnumType(EDialogueEnumWithObjectType::Condition);
 		ConditionTypePropertyRow_CustomDisplay->Update();
 	}
 
+	// ParticipantTag
+	{
+		ParticipantTagPropertyRow = &StructBuilder.AddProperty(
+			StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgCondition, ParticipantTag)).ToSharedRef());
+		ParticipantTagPropertyRow->Visibility(CREATE_VISIBILITY_CALLBACK(&Self::GetParticipantTagVisibility));
+	}
+
 	// ParticipantName
 	{
-		FDetailWidgetRow* DetailWidgetRow = &StructBuilder.AddCustomRow(LOCTEXT("ParticipantNameSearchKey", "Participant Name"));
-
-		ParticipantNamePropertyRow = MakeShared<FDlgTextPropertyPickList_CustomRowHelper>(DetailWidgetRow, ParticipantNamePropertyHandle);
-		ParticipantNamePropertyRow->SetTextPropertyPickListWidget(
-			SNew(SDlgTextPropertyPickList)
-			.IsEnabled(InStructPropertyHandle->IsEditable())
-			.AvailableSuggestions(this, &Self::GetDialoguesParticipantNames)
-			.OnTextCommitted(this, &Self::HandleTextCommitted)
-			.HasContextCheckbox(bHasDialogue)
-			.IsContextCheckBoxChecked(true)
-			.CurrentContextAvailableSuggestions(this, &Self::GetCurrentDialogueParticipantNames)
-		)
-		.SetVisibility(CREATE_VISIBILITY_CALLBACK(&Self::GetParticipantNameVisibility))
-		.Update();
+		ParticipantNamePropertyRow = &StructBuilder.AddProperty(
+			StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgCondition, ParticipantName)).ToSharedRef());
+		ParticipantNamePropertyRow->Visibility(CREATE_VISIBILITY_CALLBACK(&Self::GetParticipantTagVisibility));
 	}
 
 	// CallbackName (variable name)
@@ -132,22 +128,24 @@ void FDlgCondition_Details::CustomizeChildren(
 		CompareTypePropertyRow->Visibility(CREATE_VISIBILITY_CALLBACK(&Self::GetCompareTypeVisibility));
 	}
 
+	// OtherParticipantTag
+	{
+		FDetailWidgetRow* DetailWidgetRow = &StructBuilder.AddCustomRow(LOCTEXT("ParticipantTagSearchKey", "Participant Tag"));
+
+		OtherParticipantTagPropertyRow = &StructBuilder.AddProperty(
+			StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgCondition, OtherParticipantTag)).ToSharedRef()
+		);
+		OtherParticipantTagPropertyRow->Visibility(CREATE_VISIBILITY_CALLBACK(&Self::GetOtherParticipantNameAndVariableVisibility));
+	}
+
 	// OtherParticipantName
 	{
 		FDetailWidgetRow* DetailWidgetRow = &StructBuilder.AddCustomRow(LOCTEXT("ParticipantNameSearchKey", "Participant Name"));
 
-		ParticipantNamePropertyRow = MakeShared<FDlgTextPropertyPickList_CustomRowHelper>(DetailWidgetRow, OtherParticipantNamePropertyHandle);
-		ParticipantNamePropertyRow->SetTextPropertyPickListWidget(
-			SNew(SDlgTextPropertyPickList)
-			.IsEnabled(InStructPropertyHandle->IsEditable())
-			.AvailableSuggestions(this, &Self::GetDialoguesParticipantNames)
-			.OnTextCommitted(this, &Self::HandleTextCommitted)
-			.HasContextCheckbox(true)
-			.IsContextCheckBoxChecked(true)
-			.CurrentContextAvailableSuggestions(this, &Self::GetCurrentDialogueParticipantNames)
-		)
-		.SetVisibility(CREATE_VISIBILITY_CALLBACK(&Self::GetOtherParticipantNameAndVariableVisibility))
-		.Update();
+		OtherParticipantNamePropertyRow = &StructBuilder.AddProperty(
+			StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgCondition, OtherParticipantName)).ToSharedRef()
+		);
+		OtherParticipantNamePropertyRow->Visibility(CREATE_VISIBILITY_CALLBACK(&Self::GetOtherParticipantNameAndVariableVisibility));
 	}
 
 	// Other variable name
@@ -376,8 +374,8 @@ TArray<FName> FDlgCondition_Details::GetCallbackNamesForParticipant(bool bCurren
 {
 	TArray<FName> Suggestions;
 	TSet<FName> SuggestionSet;
-	const TSharedPtr<IPropertyHandle>& ParticipantHandle = bOtherValue ? OtherParticipantNamePropertyHandle : ParticipantNamePropertyHandle;
-	const FName ParticipantName = FDlgDetailsPanelUtils::GetParticipantNameFromPropertyHandle(ParticipantHandle.ToSharedRef());
+	const TSharedPtr<IPropertyHandle>& ParticipantHandle = bOtherValue ? OtherParticipantTagPropertyHandle : ParticipantTagPropertyHandle;
+	const FGameplayTag ParticipantTag = FDlgDetailsPanelUtils::GetParticipantTagFromPropertyHandle(ParticipantHandle.ToSharedRef());
 
 	bool bReflectionBased = false;
 	if (bOtherValue)
@@ -399,7 +397,7 @@ TArray<FName> FDlgCondition_Details::GetCallbackNamesForParticipant(bool bCurren
 		if (bReflectionBased && Dialogue)
 		{
 			FNYReflectionHelper::GetVariableNames(
-				Dialogue->GetParticipantClass(ParticipantName),
+				Dialogue->GetParticipantClass(ParticipantTag),
 				FBoolProperty::StaticClass(),
 				Suggestions,
 				GetDefault<UDlgSystemSettings>()->BlacklistedReflectionClasses
@@ -409,12 +407,12 @@ TArray<FName> FDlgCondition_Details::GetCallbackNamesForParticipant(bool bCurren
 		{
 			if (bCurrentOnly && Dialogue)
 			{
-				SuggestionSet.Append(Dialogue->GetParticipantBoolNames(ParticipantName));
+				SuggestionSet.Append(Dialogue->GetParticipantBoolNames(ParticipantTag));
 				Suggestions = SuggestionSet.Array();
 			}
 			else
 			{
-				Suggestions.Append(UDlgManager::GetDialoguesParticipantBoolNames(ParticipantName));
+				Suggestions.Append(UDlgManager::GetDialoguesParticipantBoolNames(ParticipantTag));
 			}
 		}
 		break;
@@ -424,7 +422,7 @@ TArray<FName> FDlgCondition_Details::GetCallbackNamesForParticipant(bool bCurren
 		if (bReflectionBased && Dialogue)
 		{
 			FNYReflectionHelper::GetVariableNames(
-				Dialogue->GetParticipantClass(ParticipantName),
+				Dialogue->GetParticipantClass(ParticipantTag),
 				FDoubleProperty::StaticClass(),
 				Suggestions,
 				GetDefault<UDlgSystemSettings>()->BlacklistedReflectionClasses
@@ -434,11 +432,11 @@ TArray<FName> FDlgCondition_Details::GetCallbackNamesForParticipant(bool bCurren
 		{
 			if (bCurrentOnly && Dialogue)
 			{
-				SuggestionSet.Append(Dialogue->GetParticipantFloatNames(ParticipantName));
+				SuggestionSet.Append(Dialogue->GetParticipantFloatNames(ParticipantTag));
 			}
 			else
 			{
-				Suggestions.Append(UDlgManager::GetDialoguesParticipantFloatNames(ParticipantName));
+				Suggestions.Append(UDlgManager::GetDialoguesParticipantFloatNames(ParticipantTag));
 			}
 		}
 		break;
@@ -448,7 +446,7 @@ TArray<FName> FDlgCondition_Details::GetCallbackNamesForParticipant(bool bCurren
 		if (bReflectionBased && Dialogue)
 		{
 			FNYReflectionHelper::GetVariableNames(
-				Dialogue->GetParticipantClass(ParticipantName),
+				Dialogue->GetParticipantClass(ParticipantTag),
 				FIntProperty::StaticClass(),
 				Suggestions,
 				GetDefault<UDlgSystemSettings>()->BlacklistedReflectionClasses
@@ -458,11 +456,11 @@ TArray<FName> FDlgCondition_Details::GetCallbackNamesForParticipant(bool bCurren
 		{
 			if (bCurrentOnly && Dialogue)
 			{
-				SuggestionSet.Append(Dialogue->GetParticipantIntNames(ParticipantName));
+				SuggestionSet.Append(Dialogue->GetParticipantIntNames(ParticipantTag));
 			}
 			else
 			{
-				Suggestions.Append(UDlgManager::GetDialoguesParticipantIntNames(ParticipantName));
+				Suggestions.Append(UDlgManager::GetDialoguesParticipantIntNames(ParticipantTag));
 			}
 		}
 		break;
@@ -472,7 +470,7 @@ TArray<FName> FDlgCondition_Details::GetCallbackNamesForParticipant(bool bCurren
 		if (bReflectionBased && Dialogue)
 		{
 			FNYReflectionHelper::GetVariableNames(
-				Dialogue->GetParticipantClass(ParticipantName),
+				Dialogue->GetParticipantClass(ParticipantTag),
 				FNameProperty::StaticClass(),
 				Suggestions,
 				GetDefault<UDlgSystemSettings>()->BlacklistedReflectionClasses
@@ -482,11 +480,11 @@ TArray<FName> FDlgCondition_Details::GetCallbackNamesForParticipant(bool bCurren
 		{
 			if (bCurrentOnly && Dialogue)
 			{
-				SuggestionSet.Append(Dialogue->GetParticipantFNameNames(ParticipantName));
+				SuggestionSet.Append(Dialogue->GetParticipantFNameNames(ParticipantTag));
 			}
 			else
 			{
-				Suggestions.Append(UDlgManager::GetDialoguesParticipantFNameNames(ParticipantName));
+				Suggestions.Append(UDlgManager::GetDialoguesParticipantFNameNames(ParticipantTag));
 			}
 		}
 		break;
@@ -496,11 +494,11 @@ TArray<FName> FDlgCondition_Details::GetCallbackNamesForParticipant(bool bCurren
 	default:
 		if (bCurrentOnly && Dialogue)
 		{
-			SuggestionSet.Append(Dialogue->GetParticipantConditionNames(ParticipantName));
+			SuggestionSet.Append(Dialogue->GetParticipantConditionNames(ParticipantTag));
 		}
 		else
 		{
-			Suggestions.Append(UDlgManager::GetDialoguesParticipantConditionNames(ParticipantName));
+			Suggestions.Append(UDlgManager::GetDialoguesParticipantConditionNames(ParticipantTag));
 		}
 		break;
 	}
@@ -510,7 +508,7 @@ TArray<FName> FDlgCondition_Details::GetCallbackNamesForParticipant(bool bCurren
 		Suggestions = SuggestionSet.Array();
 	}
 
-	FDlgHelper::SortDefault(Suggestions);
+	FDlgHelper::SortFNameDefault(Suggestions);
 	return Suggestions;
 }
 

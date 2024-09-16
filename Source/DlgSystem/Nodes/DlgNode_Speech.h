@@ -48,7 +48,7 @@ public:
 
 	bool HandleNodeEnter(UDlgContext& Context, TSet<const UDlgNode*> NodesEnteredWithThisStep) override;
 	bool ReevaluateChildren(UDlgContext& Context, TSet<const UDlgNode*> AlreadyEvaluated) override;
-	void GetAssociatedParticipants(TArray<FName>& OutArray) const override;
+	void GetAssociatedParticipants(TArray<FGameplayTag>& OutArray) const override;
 
 	void UpdateTextsValuesFromDefaultsAndRemappings(const UDlgSystemSettings& Settings, bool bEdges, bool bUpdateGraphNode = true) override;
 	void UpdateTextsNamespacesAndKeys(const UDlgSystemSettings& Settings, bool bEdges, bool bUpdateGraphNode = true) override;

@@ -8,6 +8,8 @@
 #include "Widgets/Input/SComboButton.h"
 #include "Widgets/Input/SCheckBox.h"
 
+#include "GameplayTagContainer.h"
+
 class IPropertyHandle;
 
 /**
@@ -74,6 +76,16 @@ public:
 
 		/** All possible suggestions for the search text, as string. */
 		SLATE_ATTRIBUTE(TArray<FString>, AvailableStringSuggestions)
+
+		/** All possible suggestions for the search text, as tag. */
+		SLATE_ATTRIBUTE(TArray<FGameplayTag>, AvailableTagSuggestions)
+
+		/**
+		 *  All possible tag suggestions for the search text If the context sensitive checkbox is true.
+		 *  Aka the current context
+		 *  Only used if HasContextCheckbox is true.
+		 */
+		SLATE_ATTRIBUTE(TArray<FGameplayTag>, CurrentContextAvailableTagSuggestions)
 
 		/** Invoked whenever the text changes */
 		SLATE_EVENT(FOnTextChanged, OnTextChanged)

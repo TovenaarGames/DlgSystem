@@ -3,7 +3,7 @@
 
 #include "CoreMinimal.h"
 #include "DlgConditionCustom.h"
-
+#include "GameplayTagContainer.h"
 
 #include "DlgCondition.generated.h"
 
@@ -113,7 +113,7 @@ public:
 	{
 		return Strength == Other.Strength &&
 			ConditionType == Other.ConditionType &&
-			ParticipantName == Other.ParticipantName &&
+			ParticipantTag.MatchesTagExact(Other.ParticipantTag) &&
 			CallbackName == Other.CallbackName &&
 			IntValue == Other.IntValue &&
 			FMath::IsNearlyEqual(FloatValue, Other.FloatValue) &&
@@ -122,7 +122,7 @@ public:
 			bLongTermMemory == Other.bLongTermMemory &&
 			Operation == Other.Operation &&
 			CompareType == Other.CompareType &&
-			OtherParticipantName == Other.OtherParticipantName &&
+			OtherParticipantTag.MatchesTagExact(Other.OtherParticipantTag) &&
 			OtherVariableName == Other.OtherVariableName &&
 			GUID == Other.GUID &&
 			CustomCondition == Other.CustomCondition;
@@ -132,7 +132,7 @@ public:
 	// Own methods
 	//
 
-	static bool EvaluateArray(const UDlgContext& Context, const TArray<FDlgCondition>& ConditionsArray, FName DefaultParticipantName = NAME_None);
+	static bool EvaluateArray(const UDlgContext& Context, const TArray<FDlgCondition>& ConditionsArray, const FGameplayTag& DefaultParticipantTag = FGameplayTag::EmptyTag);
 	bool IsConditionMet(const UDlgContext& Context, const UObject* Participant) const;
 
 	// returns true if ParticipantName has to belong to match with a valid Participant in order for the condition type to work */
@@ -227,8 +227,12 @@ public:
 	EDlgConditionType ConditionType = EDlgConditionType::IntCall;
 
 	// Name of the participant (speaker) the event is called on.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Condition")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Dialogue|Condition", meta=(DeprecatedProperty, DeprecationMessage="Use ParticipantTag in stead!"))
 	FName ParticipantName;
+
+	// Tag of the participant (speaker) the event is called on.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Condition")
+	FGameplayTag ParticipantTag;
 
 	// Name of the variable or event, passed in the function call to the participant
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Condition")
@@ -242,8 +246,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Condition")
 	EDlgCompare CompareType = EDlgCompare::ToConst;
 
-	// Name of the other participant (speaker) the check is performed against (with some compare types)
+	// Tag of the other participant (speaker) the check is performed against (with some compare types)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Condition")
+	FGameplayTag OtherParticipantTag;
+
+	// Tag of the other participant (speaker) the check is performed against (with some compare types)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Dialogue|Condition", meta=(DeprecatedProperty, DeprecationMessage="Use OtherParticipantTag"))
 	FName OtherParticipantName;
 
 	// Name of the variable of the other participant the value is checked against (with some compare types)

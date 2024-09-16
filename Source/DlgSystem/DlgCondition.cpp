@@ -11,15 +11,15 @@
 #include "DlgHelper.h"
 #include "Logging/DlgLogger.h"
 
-bool FDlgCondition::EvaluateArray(const UDlgContext& Context, const TArray<FDlgCondition>& ConditionsArray, FName DefaultParticipantName)
+bool FDlgCondition::EvaluateArray(const UDlgContext& Context, const TArray<FDlgCondition>& ConditionsArray, const FGameplayTag& DefaultParticipantTag)
 {
 	bool bHasAnyWeak = false;
 	bool bHasSuccessfulWeak = false;
 
 	for (const FDlgCondition& Condition : ConditionsArray)
 	{
-		const FName ParticipantName = Condition.ParticipantName == NAME_None ? DefaultParticipantName : Condition.ParticipantName;
-		const bool bSatisfied = Condition.IsConditionMet(Context, Context.GetParticipant(ParticipantName));
+		const FGameplayTag ParticipantTag = UBSDlgFunctions::IsValidParticipantTag(Condition.ParticipantTag)? Condition.ParticipantTag : DefaultParticipantTag;
+		const bool bSatisfied = Condition.IsConditionMet(Context, Context.GetParticipant(ParticipantTag));
 		if (Condition.Strength == EDlgConditionStrength::Weak)
 		{
 			bHasAnyWeak = true;
@@ -115,7 +115,7 @@ bool FDlgCondition::CheckFloat(const UDlgContext& Context, double Value) const
 	double ValueToCheckAgainst = FloatValue;
 	if (CompareType == EDlgCompare::ToVariable || CompareType == EDlgCompare::ToClassVariable)
 	{
-		const UObject* OtherParticipant = Context.GetParticipant(OtherParticipantName);
+		const UObject* OtherParticipant = Context.GetParticipant(OtherParticipantTag);
 		if (!ValidateIsParticipantValid(Context, TEXT("CheckFloat"), OtherParticipant))
 		{
 			return false;
@@ -165,7 +165,7 @@ bool FDlgCondition::CheckInt(const UDlgContext& Context, int32 Value) const
 	int32 ValueToCheckAgainst = IntValue;
 	if (CompareType == EDlgCompare::ToVariable || CompareType == EDlgCompare::ToClassVariable)
 	{
-		const UObject* OtherParticipant = Context.GetParticipant(OtherParticipantName);
+		const UObject* OtherParticipant = Context.GetParticipant(OtherParticipantTag);
 		if (!ValidateIsParticipantValid(Context, TEXT("CheckInt"), OtherParticipant))
 		{
 			return false;
@@ -215,7 +215,7 @@ bool FDlgCondition::CheckBool(const UDlgContext& Context, bool bValue) const
 	bool bResult = bValue;
 	if (CompareType == EDlgCompare::ToVariable || CompareType == EDlgCompare::ToClassVariable)
 	{
-		const UObject* OtherParticipant = Context.GetParticipant(OtherParticipantName);
+		const UObject* OtherParticipant = Context.GetParticipant(OtherParticipantTag);
 		if (!ValidateIsParticipantValid(Context, TEXT("CheckBool"), OtherParticipant))
 		{
 			return false;
@@ -243,7 +243,7 @@ bool FDlgCondition::CheckName(const UDlgContext& Context, FName Value) const
 	FName ValueToCheckAgainst = NameValue;
 	if (CompareType == EDlgCompare::ToVariable || CompareType == EDlgCompare::ToClassVariable)
 	{
-		const UObject* OtherParticipant = Context.GetParticipant(OtherParticipantName);
+		const UObject* OtherParticipant = Context.GetParticipant(OtherParticipantTag);
 		if (!ValidateIsParticipantValid(Context, TEXT("CheckName"), OtherParticipant))
 		{
 			return false;
@@ -293,7 +293,7 @@ FString FDlgCondition::GetEditorDisplayString(UDlgDialogue* OwnerDialogue) const
 {
 	auto GetOther = [&](const FString& ConstAsString) -> FString
 	{
-		const FString OtherAsString = FString(TEXT("[")) + OtherParticipantName.ToString() + FString(TEXT("] "));
+		const FString OtherAsString = FString(TEXT("[")) + UBSDlgFunctions::GetParticipantLeafTag(OtherParticipantTag) + FString(TEXT("] "));
 		switch (CompareType)
 		{
 			case EDlgCompare::ToConst:
@@ -357,7 +357,7 @@ FString FDlgCondition::GetEditorDisplayString(UDlgDialogue* OwnerDialogue) const
 		case EDlgConditionType::Custom:
 			if (CustomCondition != nullptr)
 			{
-				return CustomCondition->GetEditorDisplayString(OwnerDialogue, ParticipantName);
+				return CustomCondition->GetEditorDisplayString(OwnerDialogue, ParticipantTag);
 			}
 			return GetParticipantNameAsStringPrefix() + TEXT(" INVALID CUSTOM");
 
@@ -368,7 +368,7 @@ FString FDlgCondition::GetEditorDisplayString(UDlgDialogue* OwnerDialogue) const
 
 FString FDlgCondition::GetParticipantNameAsStringPrefix() const
 {
-	return FString(TEXT("[")) + ParticipantName.ToString() + FString(TEXT("] "));
+	return FString(TEXT("[")) + ParticipantTag.ToString() + FString(TEXT("] "));
 }
 
 FString FDlgCondition::ConditionTypeToString(EDlgConditionType Type)

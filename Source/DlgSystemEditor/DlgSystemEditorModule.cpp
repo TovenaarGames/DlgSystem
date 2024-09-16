@@ -33,11 +33,11 @@
 #include "Editor/DetailsPanel/DlgCondition_Details.h"
 #include "Editor/DetailsPanel/DlgEvent_Details.h"
 #include "Editor/DetailsPanel/DlgTextArgument_Details.h"
-#include "Editor/DetailsPanel/DlgParticipantName_Details.h"
+#include "Editor/DetailsPanel/DlgParticipantTag_Details.h"
 #include "Editor/DetailsPanel/DlgSpeechSequenceEntry_Details.h"
 #include "DlgSystem/DlgManager.h"
 #include "DlgSystem/IDlgSystemModule.h"
-#include "DlgSystem/DlgParticipantName.h"
+#include "DlgSystem/DlgParticipantTag.h"
 
 #include "DlgSystem/IO/DlgConfigWriter.h"
 #include "DlgSystem/Logging/DlgLogger.h"
@@ -168,7 +168,7 @@ void FDlgSystemEditorModule::StartupModule()
 			FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FDlgEvent_Details::MakeInstance),
 			FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FDlgSpeechSequenceEntry_Details::MakeInstance),
 			FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FDlgTextArgument_Details::MakeInstance),
-			FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FDlgParticipantName_Details::MakeInstance)
+			FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FDlgParticipantTag_Details::MakeInstance)
 		};
 		RegisteredCustomPropertyTypeLayout = {
 			FDlgEdge::StaticStruct()->GetFName(),
@@ -176,7 +176,7 @@ void FDlgSystemEditorModule::StartupModule()
 			FDlgEvent::StaticStruct()->GetFName(),
 			FDlgSpeechSequenceEntry::StaticStruct()->GetFName(),
 			FDlgTextArgument::StaticStruct()->GetFName(),
-			FDlgParticipantName::StaticStruct()->GetFName()
+			FDlgParticipantTag::StaticStruct()->GetFName()
 		};
 		for (int32 i = 0; i < RegisteredCustomPropertyTypeLayout.Num(); i++)
 		{

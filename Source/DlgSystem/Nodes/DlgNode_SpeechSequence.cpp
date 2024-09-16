@@ -3,6 +3,7 @@
 
 #include "DlgSystem/DlgContext.h"
 #include "DlgSystem/DlgLocalizationHelper.h"
+#include "DlgSystem/DlgHelper.h"
 
 
 #if WITH_EDITOR
@@ -204,25 +205,25 @@ void UDlgNode_SpeechSequence::AddAllSpeakerStatesIntoSet(TSet<FName>& OutStates)
 	}
 }
 
-FName UDlgNode_SpeechSequence::GetNodeParticipantName() const
+FGameplayTag UDlgNode_SpeechSequence::GetNodeParticipantTag() const
 {
 	if (SpeechSequence.IsValidIndex(ActualIndex))
 	{
-		return SpeechSequence[ActualIndex].Speaker;
+		return SpeechSequence[ActualIndex].SpeakerTag;
 	}
 
-	return OwnerName;
+	return OwnerTag;
 }
 
-void UDlgNode_SpeechSequence::GetAssociatedParticipants(TArray<FName>& OutArray) const
+void UDlgNode_SpeechSequence::GetAssociatedParticipants(TArray<FGameplayTag>& OutArray) const
 {
 	Super::GetAssociatedParticipants(OutArray);
 
 	for (const FDlgSpeechSequenceEntry& Entry : SpeechSequence)
 	{
-		if (Entry.Speaker != NAME_None)
+		if (UBSDlgFunctions::IsValidParticipantTag(Entry.SpeakerTag))
 		{
-			OutArray.AddUnique(Entry.Speaker);
+			OutArray.AddUnique(Entry.SpeakerTag);
 		}
 	}
 }

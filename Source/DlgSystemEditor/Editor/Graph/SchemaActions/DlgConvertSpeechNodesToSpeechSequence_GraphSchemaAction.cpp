@@ -37,7 +37,7 @@ UEdGraphNode* FDlgConvertSpeechNodesToSpeechSequence_GraphSchemaAction::PerformA
 	{
 		const UDlgNode_Speech& DialogueNode_Speech = GraphNode->GetDialogueNode<UDlgNode_Speech>();
 		auto SequenceEntry = FDlgSpeechSequenceEntry{};
-		SequenceEntry.Speaker = DialogueNode_Speech.GetNodeParticipantName();
+		SequenceEntry.SpeakerTag = DialogueNode_Speech.GetNodeParticipantTag();
 		SequenceEntry.Text = DialogueNode_Speech.GetNodeText();
 		SequenceEntry.NodeData = DialogueNode_Speech.GetNodeData();
 		SequenceEntry.SpeakerState = DialogueNode_Speech.GetSpeakerState();

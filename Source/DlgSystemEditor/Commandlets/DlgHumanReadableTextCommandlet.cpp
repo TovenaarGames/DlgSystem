@@ -253,7 +253,7 @@ bool UDlgHumanReadableTextCommandlet::ExportDialogueToHumanReadableFormat(const 
 			// Fill Nodes
 			FDlgNodeSpeech_FormatHumanReadable ExportNode;
 			ExportNode.NodeIndex = NodeIndex;
-			ExportNode.Speaker = NodeSpeech->GetNodeParticipantName();
+			ExportNode.SpeakerTag = FName(NodeSpeech->GetNodeParticipantTag().ToString());
 			ExportNode.Text = NodeSpeech->GetNodeUnformattedText();
 
 			// Fill Edges
@@ -266,7 +266,7 @@ bool UDlgHumanReadableTextCommandlet::ExportDialogueToHumanReadableFormat(const 
 
 			FDlgNodeSpeechSequence_FormatHumanReadable ExportNode;
 			ExportNode.NodeIndex = NodeIndex;
-			ExportNode.Speaker = NodeSpeechSequence->GetNodeParticipantName();
+			ExportNode.SpeakerTag = FName(NodeSpeechSequence->GetNodeParticipantTag().ToString());
 
 			// Fill sequence
 			for (const FDlgSpeechSequenceEntry& Entry : NodeSpeechSequence->GetNodeSpeechSequence())
@@ -274,7 +274,7 @@ bool UDlgHumanReadableTextCommandlet::ExportDialogueToHumanReadableFormat(const 
 				FDlgSpeechSequenceEntry_FormatHumanReadable ExportEntry;
 				ExportEntry.EdgeText = Entry.EdgeText;
 				ExportEntry.Text = Entry.Text;
-				ExportEntry.Speaker = Entry.Speaker;
+				ExportEntry.SpeakerTag = FName(Entry.SpeakerTag.ToString());
 				ExportNode.Sequence.Add(ExportEntry);
 			}
 
@@ -392,9 +392,9 @@ bool UDlgHumanReadableTextCommandlet::ImportHumanReadableFormatIntoDialogue(cons
 			}
 
 			// Node speaker changed
-			if (!NodeSpeech->GetNodeParticipantName().IsEqual(HumanNode.Speaker, ENameCase::CaseSensitive))
+			if (!FName(NodeSpeech->GetNodeParticipantTag().ToString()).IsEqual(HumanNode.SpeakerTag, ENameCase::CaseSensitive))
 			{
-				NodeSpeech->SetNodeParticipantName(HumanNode.Speaker);
+				NodeSpeech->SetNodeParticipantTag(FGameplayTag::RequestGameplayTag(HumanNode.SpeakerTag));
 				bModified = true;
 			}
 		}
@@ -444,9 +444,9 @@ bool UDlgHumanReadableTextCommandlet::ImportHumanReadableFormatIntoDialogue(cons
 		}
 
 		// Node speaker changed
-		if (!NodeSpeechSequence->GetNodeParticipantName().IsEqual(HumanSpeechSequence.Speaker, ENameCase::CaseSensitive))
+		if (!FName(NodeSpeechSequence->GetNodeParticipantTag().ToString()).IsEqual(HumanSpeechSequence.SpeakerTag, ENameCase::CaseSensitive))
 		{
-			NodeSpeechSequence->SetNodeParticipantName(HumanSpeechSequence.Speaker);
+			NodeSpeechSequence->SetNodeParticipantTag(FGameplayTag::RequestGameplayTag(HumanSpeechSequence.SpeakerTag));
 			bModified = true;
 		}
 
@@ -464,9 +464,9 @@ bool UDlgHumanReadableTextCommandlet::ImportHumanReadableFormatIntoDialogue(cons
 			}
 
 			// Speaker Changed
-			if (!SequenceArray[SequenceIndex].Speaker.IsEqual(HumanSequence.Speaker, ENameCase::CaseSensitive))
+			if (!FName(SequenceArray[SequenceIndex].SpeakerTag.ToString()).IsEqual(HumanSequence.SpeakerTag, ENameCase::CaseSensitive))
 			{
-				SequenceArray[SequenceIndex].Speaker = HumanSequence.Speaker;
+				SequenceArray[SequenceIndex].SpeakerTag = FGameplayTag::RequestGameplayTag(HumanSequence.SpeakerTag);
 				bModified = true;
 			}
 

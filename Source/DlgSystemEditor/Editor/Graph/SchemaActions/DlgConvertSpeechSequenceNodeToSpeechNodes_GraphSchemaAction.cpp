@@ -57,7 +57,7 @@ UEdGraphNode* FDlgConvertSpeechSequenceNodeToSpeechNodes_GraphSchemaAction::Perf
 		UDlgNode_Speech* Speech_DialogueNode = Speech_GraphNode->GetMutableDialogueNode<UDlgNode_Speech>();
 
 		// Copy data
-		Speech_DialogueNode->SetNodeParticipantName(SequenceEntry.Speaker);
+		Speech_DialogueNode->SetNodeParticipantTag(SequenceEntry.SpeakerTag);
 		Speech_DialogueNode->SetNodeText(SequenceEntry.Text);
 		Speech_DialogueNode->SetNodeData(SequenceEntry.NodeData);
 		Speech_DialogueNode->SetSpeakerState(SequenceEntry.SpeakerState);

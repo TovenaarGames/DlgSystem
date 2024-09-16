@@ -15,7 +15,7 @@
 
 bool FDlgEnumTypeWithObject_CustomRowHelper::CanBeVisible() const
 {
-	if (!HasParticipantName() || !Dialogue.IsValid() || !GetObject())
+	if (!HasParticipantTag() || !Dialogue.IsValid() || !GetObject())
 	{
 		return false;
 	}
@@ -38,13 +38,13 @@ UObject* FDlgEnumTypeWithObject_CustomRowHelper::GetObject() const
 	{
 		return nullptr;
 	}
-	const FName ParticipantName = GetParticipantName();
-	if (ParticipantName == NAME_None)
+	const FGameplayTag ParticipantTag = GetParticipantTag();
+	if (!UBSDlgFunctions::IsValidParticipantTag(ParticipantTag))
 	{
 		return nullptr;
 	}
 
-	UClass* Class = Dialogue->GetParticipantClass(ParticipantName);
+	UClass* Class = Dialogue->GetParticipantClass(ParticipantTag);
 	if (!Class)
 	{
 		return nullptr;
@@ -104,14 +104,19 @@ uint8 FDlgEnumTypeWithObject_CustomRowHelper::GetEnumValue() const
 	return Value;
 }
 
-FName FDlgEnumTypeWithObject_CustomRowHelper::GetParticipantName() const
+FGameplayTag FDlgEnumTypeWithObject_CustomRowHelper::GetParticipantTag() const
 {
-	if (!ParticipantNamePropertyHandle.IsValid())
+	if (!ParticipantTagPropertyHandle.IsValid())
 	{
-		return NAME_None;
+		return FGameplayTag::EmptyTag;
 	}
 
-	return FDlgDetailsPanelUtils::GetParticipantNameFromPropertyHandle(ParticipantNamePropertyHandle.ToSharedRef());
+	return FDlgDetailsPanelUtils::GetParticipantTagFromPropertyHandle(ParticipantTagPropertyHandle.ToSharedRef());
+}
+
+bool FDlgEnumTypeWithObject_CustomRowHelper::HasParticipantTag() const
+{
+	return UBSDlgFunctions::IsValidParticipantTag(GetParticipantTag());
 }
 
 #undef LOCTEXT_NAMESPACE

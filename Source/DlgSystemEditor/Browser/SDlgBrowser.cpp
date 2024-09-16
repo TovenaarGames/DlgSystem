@@ -279,17 +279,17 @@ void SDlgBrowser::RefreshTree(bool bPreserveExpansion)
 		const FGuid DialogueGUID = Dialogue->GetGUID();
 
 		// Populate Participants
-		TSet<FName> ParticipantsNames = Dialogue->GetParticipantNames();
-		for (const FName& ParticipantName : ParticipantsNames)
+		FGameplayTagContainer ParticipantsTags = Dialogue->GetParticipantTags();
+		for (const FGameplayTag& ParticipantTag : ParticipantsTags)
 		{
-			TSharedPtr<FDlgBrowserTreeParticipantProperties>* ParticipantPropsPtr = ParticipantsProperties.Find(ParticipantName);
+			TSharedPtr<FDlgBrowserTreeParticipantProperties>* ParticipantPropsPtr = ParticipantsProperties.Find(ParticipantTag);
 			TSharedPtr<FDlgBrowserTreeParticipantProperties> ParticipantProps;
 			if (ParticipantPropsPtr == nullptr)
 			{
 				// participant does not exist, create it
 				const TSet<TWeakObjectPtr<const UDlgDialogue>> SetArgument{Dialogue};
 				ParticipantProps = MakeShared<FDlgBrowserTreeParticipantProperties>(SetArgument);
-				ParticipantsProperties.Add(ParticipantName, ParticipantProps);
+				ParticipantsProperties.Add(ParticipantTag, ParticipantProps);
 			}
 			else
 			{
@@ -299,7 +299,7 @@ void SDlgBrowser::RefreshTree(bool bPreserveExpansion)
 			}
 
 			// Populate events
-			const TSet<FName> EventsNames = Dialogue->GetParticipantEventNames(ParticipantName);
+			const TSet<FName> EventsNames = Dialogue->GetParticipantEventNames(ParticipantTag);
 			for (const FName& EventName : EventsNames)
 			{
 				PopulateVariablePropertiesFromSearchResult(
@@ -310,7 +310,7 @@ void SDlgBrowser::RefreshTree(bool bPreserveExpansion)
 			}
 
 			// Populate Unreal Function Names
-			const TSet<FName> FunctionNames = Dialogue->GetParticipantFunctionNames(ParticipantName);
+			const TSet<FName> FunctionNames = Dialogue->GetParticipantFunctionNames(ParticipantTag);
 			for (const FName& FunctionName : FunctionNames)
 			{
 				PopulateVariablePropertiesFromSearchResult(
@@ -321,7 +321,7 @@ void SDlgBrowser::RefreshTree(bool bPreserveExpansion)
 			}
 
 			// Populate Custom events
-			const TSet<UClass*> CustomEventsClasses = Dialogue->GetParticipantCustomEvents(ParticipantName);
+			const TSet<UClass*> CustomEventsClasses = Dialogue->GetParticipantCustomEvents(ParticipantTag);
 			for (UClass* EventClass : CustomEventsClasses)
 			{
 				PopulateVariablePropertiesFromSearchResult(
@@ -332,7 +332,7 @@ void SDlgBrowser::RefreshTree(bool bPreserveExpansion)
 			}
 
 			// Populate conditions
-			const TSet<FName> ConditionNames = Dialogue->GetParticipantConditionNames(ParticipantName);
+			const TSet<FName> ConditionNames = Dialogue->GetParticipantConditionNames(ParticipantTag);
 			for (const FName& ConditionName : ConditionNames)
 			{
 				PopulateVariablePropertiesFromSearchResult(
@@ -343,7 +343,7 @@ void SDlgBrowser::RefreshTree(bool bPreserveExpansion)
 			}
 
 			// Populate int variable names
-			const TSet<FName> IntVariableNames = Dialogue->GetParticipantIntNames(ParticipantName);
+			const TSet<FName> IntVariableNames = Dialogue->GetParticipantIntNames(ParticipantTag);
 			for (const FName& IntVariableName : IntVariableNames)
 			{
 				PopulateVariablePropertiesFromSearchResult(
@@ -354,7 +354,7 @@ void SDlgBrowser::RefreshTree(bool bPreserveExpansion)
 			}
 
 			// Populate float variable names
-			const TSet<FName> FloatVariableNames = Dialogue->GetParticipantFloatNames(ParticipantName);
+			const TSet<FName> FloatVariableNames = Dialogue->GetParticipantFloatNames(ParticipantTag);
 			for (const FName& FloatVariableName : FloatVariableNames)
 			{
 				PopulateVariablePropertiesFromSearchResult(
@@ -365,7 +365,7 @@ void SDlgBrowser::RefreshTree(bool bPreserveExpansion)
 			}
 
 			// Populate bool variable names
-			const TSet<FName> BoolVariableNames = Dialogue->GetParticipantBoolNames(ParticipantName);
+			const TSet<FName> BoolVariableNames = Dialogue->GetParticipantBoolNames(ParticipantTag);
 			for (const FName& BoolVariableName : BoolVariableNames)
 			{
 				PopulateVariablePropertiesFromSearchResult(
@@ -376,7 +376,7 @@ void SDlgBrowser::RefreshTree(bool bPreserveExpansion)
 			}
 
 			// Populate FName variable names
-			const TSet<FName> FNameVariableNames = Dialogue->GetParticipantFNameNames(ParticipantName);
+			const TSet<FName> FNameVariableNames = Dialogue->GetParticipantFNameNames(ParticipantTag);
 			for (const FName& NameVariableName : FNameVariableNames)
 			{
 				PopulateVariablePropertiesFromSearchResult(
@@ -387,7 +387,7 @@ void SDlgBrowser::RefreshTree(bool bPreserveExpansion)
 			}
 
 			// Populate UClass int variable names
-			const TSet<FName> ClassIntVariableNames = Dialogue->GetParticipantClassIntNames(ParticipantName);
+			const TSet<FName> ClassIntVariableNames = Dialogue->GetParticipantClassIntNames(ParticipantTag);
 			for (const FName& IntVariableName : ClassIntVariableNames)
 			{
 				PopulateVariablePropertiesFromSearchResult(
@@ -398,7 +398,7 @@ void SDlgBrowser::RefreshTree(bool bPreserveExpansion)
 			}
 
 			// Populate UClass float variable names
-			const TSet<FName> ClassFloatVariableNames = Dialogue->GetParticipantClassFloatNames(ParticipantName);
+			const TSet<FName> ClassFloatVariableNames = Dialogue->GetParticipantClassFloatNames(ParticipantTag);
 			for (const FName& FloatVariableName : ClassFloatVariableNames)
 			{
 				PopulateVariablePropertiesFromSearchResult(
@@ -409,7 +409,7 @@ void SDlgBrowser::RefreshTree(bool bPreserveExpansion)
 			}
 
 			// Populate UClass bool variable names
-			const TSet<FName> ClassBoolVariableNames = Dialogue->GetParticipantClassBoolNames(ParticipantName);
+			const TSet<FName> ClassBoolVariableNames = Dialogue->GetParticipantClassBoolNames(ParticipantTag);
 			for (const FName& BoolVariableName : ClassBoolVariableNames)
 			{
 				PopulateVariablePropertiesFromSearchResult(
@@ -420,7 +420,7 @@ void SDlgBrowser::RefreshTree(bool bPreserveExpansion)
 			}
 
 			// Populate UClass FName variable names
-			const TSet<FName> ClassFNameVariableNames = Dialogue->GetParticipantClassFNameNames(ParticipantName);
+			const TSet<FName> ClassFNameVariableNames = Dialogue->GetParticipantClassFNameNames(ParticipantTag);
 			for (const FName& NameVariableName : ClassFNameVariableNames)
 			{
 				PopulateVariablePropertiesFromSearchResult(
@@ -431,7 +431,7 @@ void SDlgBrowser::RefreshTree(bool bPreserveExpansion)
 			}
 
 			// Populate UClass FText variable names
-			const TSet<FName> ClassFTextVariableNames = Dialogue->GetParticipantClassFTextNames(ParticipantName);
+			const TSet<FName> ClassFTextVariableNames = Dialogue->GetParticipantClassFTextNames(ParticipantTag);
 			for (const FName& TextVariableName : ClassFTextVariableNames)
 			{
 				PopulateVariablePropertiesFromSearchResult(
@@ -444,7 +444,7 @@ void SDlgBrowser::RefreshTree(bool bPreserveExpansion)
 	}
 
 	// Sort the properties
-	TArray<FName> AllParticipants;
+	TArray<FGameplayTag> AllParticipants;
 	for (const auto& Elem : ParticipantsProperties)
 	{
 		AllParticipants.Add(Elem.Key);
@@ -458,22 +458,22 @@ void SDlgBrowser::RefreshTree(bool bPreserveExpansion)
 	if (SelectedSortOption->IsByName())
 	{
 		// Sort by name
-		FDlgHelper::SortDefault(AllParticipants);
+		FDlgHelper::SortTagDefault(AllParticipants);
 	}
 	else
 	{
 		// Sort by dialogue references
-		AllParticipants.Sort([this](const FName& A, const FName& B)
+		AllParticipants.Sort([this](const FGameplayTag& A, const FGameplayTag& B)
 		{
 			return FDlgBrowserUtilities::PredicateSortByDialoguesNumDescending(A, B, ParticipantsProperties);
 		});
 	}
 
 	// Build the tree
-	for (const FName& Name : AllParticipants)
+	for (const FGameplayTag& ParticipantTag : AllParticipants)
 	{
 		const TSharedPtr<FDlgBrowserTreeNode> Participant =
-			MakeShared<FDialogueBrowserTreeCategoryParticipantNode>(FText::FromName(Name), RootTreeItem, Name);
+			MakeShared<FDialogueBrowserTreeCategoryParticipantNode>(FText::FromString(ParticipantTag.ToString()), RootTreeItem, ParticipantTag);
 
 		BuildTreeViewItem(Participant);
 		RootTreeItem->AddChild(Participant);
@@ -688,14 +688,14 @@ void SDlgBrowser::AddVariableChildrenToItem(
 
 void SDlgBrowser::BuildTreeViewItem(const TSharedPtr<FDlgBrowserTreeNode>& Item)
 {
-	const FName ParticipantName = Item->GetParentParticipantName();
-	if (!ParticipantName.IsValid() || ParticipantName.IsNone())
+	const FGameplayTag ParticipantTag = Item->GetParentParticipantTag();
+	if (!UBSDlgFunctions::IsValidParticipantTag(ParticipantTag))
 	{
 		return;
 	}
 
 	// Do we have the Participant cached?
-	TSharedPtr<FDlgBrowserTreeParticipantProperties>* ParticipantPropertiesPtr = ParticipantsProperties.Find(ParticipantName);
+	TSharedPtr<FDlgBrowserTreeParticipantProperties>* ParticipantPropertiesPtr = ParticipantsProperties.Find(ParticipantTag);
 	if (ParticipantPropertiesPtr == nullptr)
 	{
 		return;
@@ -1300,7 +1300,7 @@ TSharedRef<ITableRow> SDlgBrowser::HandleGenerateRow(
 		{
 			int32 DialogueReferences = 0;
 			TSharedPtr<FDlgBrowserTreeParticipantProperties>* ParticipantPropertiesPtr =
-				ParticipantsProperties.Find(InItem->GetParentParticipantName());
+				ParticipantsProperties.Find(InItem->GetParentParticipantTag());
 			if (ParticipantPropertiesPtr)
 			{
 				DialogueReferences = (*ParticipantPropertiesPtr)->GetDialogues().Num();

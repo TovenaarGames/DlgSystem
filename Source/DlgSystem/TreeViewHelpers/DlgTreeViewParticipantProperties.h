@@ -32,18 +32,18 @@ public:
 			Pair.Value->Sort();
 		}
 
-		FDlgHelper::SortDefault(Events);
-		FDlgHelper::SortDefault(UnrealFunctions);
-		FDlgHelper::SortDefault(Conditions);
-		FDlgHelper::SortDefault(Integers);
-		FDlgHelper::SortDefault(Floats);
-		FDlgHelper::SortDefault(Bools);
-		FDlgHelper::SortDefault(FNames);
-		FDlgHelper::SortDefault(ClassIntegers);
-		FDlgHelper::SortDefault(ClassFloats);
-		FDlgHelper::SortDefault(ClassBools);
-		FDlgHelper::SortDefault(ClassFNames);
-		FDlgHelper::SortDefault(ClassFTexts);
+		FDlgHelper::SortFNameDefault(Events);
+		FDlgHelper::SortFNameDefault(UnrealFunctions);
+		FDlgHelper::SortFNameDefault(Conditions);
+		FDlgHelper::SortFNameDefault(Integers);
+		FDlgHelper::SortFNameDefault(Floats);
+		FDlgHelper::SortFNameDefault(Bools);
+		FDlgHelper::SortFNameDefault(FNames);
+		FDlgHelper::SortFNameDefault(ClassIntegers);
+		FDlgHelper::SortFNameDefault(ClassFloats);
+		FDlgHelper::SortFNameDefault(ClassBools);
+		FDlgHelper::SortFNameDefault(ClassFNames);
+		FDlgHelper::SortFNameDefault(ClassFTexts);
 	}
 
 	// Setters

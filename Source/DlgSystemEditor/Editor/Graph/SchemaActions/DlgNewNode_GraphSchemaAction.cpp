@@ -63,13 +63,13 @@ UEdGraphNode* FDlgNewNode_GraphSchemaAction::CreateNode(
 				// Root Node use the first node from the Array
 				if (Dialogue->GetNodes().Num() > 0)
 				{
-					DialogueNode->SetNodeParticipantName(Dialogue->GetNodes()[0]->GetNodeParticipantName());
+					DialogueNode->SetNodeParticipantTag(Dialogue->GetNodes()[0]->GetNodeParticipantTag());
 				}
 			}
 			else
 			{
 				// Use the node from which we spawned this
-				DialogueNode->SetNodeParticipantName(GraphNode->GetDialogueNode().GetNodeParticipantName());
+				DialogueNode->SetNodeParticipantTag(GraphNode->GetDialogueNode().GetNodeParticipantTag());
 			}
 		}
 	}
@@ -78,7 +78,7 @@ UEdGraphNode* FDlgNewNode_GraphSchemaAction::CreateNode(
 		// Use first Node from the Array
 		if (Dialogue->GetNodes().Num() > 0)
 		{
-			DialogueNode->SetNodeParticipantName(Dialogue->GetNodes()[0]->GetNodeParticipantName());
+			DialogueNode->SetNodeParticipantTag(Dialogue->GetNodes()[0]->GetNodeParticipantTag());
 		}
 	}
 

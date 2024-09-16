@@ -5,7 +5,8 @@
 #include "DlgDialogue.h"
 #include "Nodes/DlgNode.h"
 #include "DlgMemory.h"
-#include "DlgParticipantName.h"
+#include "DlgParticipantTag.h"
+#include "GameplayTagContainer.h"
 
 #include "DlgContext.generated.h"
 
@@ -274,31 +275,31 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Dialogue|ActiveNode")
 	UDlgNodeData* GetActiveNodeData() const;
 
-	// Gets the Icon associated with the active node participant name (owner name).
+	// Gets the Icon associated with the active node participant tag (owner tag).
 	UFUNCTION(BlueprintPure, Category = "Dialogue|ActiveNode")
 	UTexture2D* GetActiveNodeParticipantIcon() const;
 
-	// Gets the Object associated with the active node participant name (owner name).
+	// Gets the Object associated with the active node participant tag (owner tag).
 	UFUNCTION(BlueprintPure, Category = "Dialogue|ActiveNode")
 	UObject* GetActiveNodeParticipant() const;
 
-	// Gets the active node participant name (owner name).
+	// Gets the active node participant tag (owner tag).
 	UFUNCTION(BlueprintPure, Category = "Dialogue|ActiveNode")
-	FName GetActiveNodeParticipantName() const;
+	FGameplayTag GetActiveNodeParticipantTag() const;
 
 	// Gets the active participant display name
 	UFUNCTION(BlueprintPure, Category = "Dialogue|ActiveNode")
 	FText GetActiveNodeParticipantDisplayName() const;
 
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Data", DisplayName = "Get Participant")
-	UObject* GetMutableParticipant(FName ParticipantName) const;
-	const UObject* GetParticipant(FName ParticipantName) const;
+	UObject* GetMutableParticipant(const FGameplayTag& ParticipantTag) const;
+	const UObject* GetParticipant(const FGameplayTag& ParticipantName) const;
 
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Data")
-	const TMap<FName, UObject*>& GetParticipantsMap() const { return Participants; }
+	const TMap<FGameplayTag, UObject*>& GetParticipantsMap() const { return Participants; }
 
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Data")
-	UObject* GetParticipantFromName(const FDlgParticipantName& Participant);
+	UObject* GetParticipantFromName(const FDlgParticipantTag& Participant);
 
 	UFUNCTION(BlueprintPure, Category = "Dialogue|ActiveNode")
 	int32 GetActiveNodeIndex() const { return ActiveNodeIndex; }
@@ -357,7 +358,7 @@ public:
 	FString GetDialoguePathName() const { check(Dialogue); return Dialogue->GetPathName(); }
 
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Data")
-	const TMap<FName, UObject*>& GetParticipants() const { return Participants; }
+	const TMap<FGameplayTag, UObject*>& GetParticipants() const { return Participants; }
 
 
 	// the Dialogue jumps to the defined node, or the function returns with false, if the conversation is over
@@ -408,8 +409,8 @@ public:
 
 	// Initializes/Starts the context, the first (start) node is selected and the first valid child node is entered.
 	// Called by the UDlgManager which creates the context
-	bool Start(UDlgDialogue* InDialogue, const TMap<FName, UObject*>& InParticipants) { return StartWithContext(TEXT(""), InDialogue, InParticipants); }
-	bool StartWithContext(const FString& ContextString, UDlgDialogue* InDialogue, const TMap<FName, UObject*>& InParticipants);
+	bool Start(UDlgDialogue* InDialogue, const TMap<FGameplayTag, UObject*>& InParticipants) { return StartWithContext(TEXT(""), InDialogue, InParticipants); }
+	bool StartWithContext(const FString& ContextString, UDlgDialogue* InDialogue, const TMap<FGameplayTag, UObject*>& InParticipants);
 
 	//
 	// Initializes/Start the context using the given node as entry point
@@ -420,7 +421,7 @@ public:
 	// NOTE: This is not safe, please use StartFromNodeGUID
 	bool StartFromNodeIndex(
 		UDlgDialogue* InDialogue,
-		const TMap<FName, UObject*>& InParticipants,
+		const TMap<FGameplayTag, UObject*>& InParticipants,
 		int32 StartNodeIndex,
 		const FDlgHistory& StartHistory,
 		bool bFireEnterEvents
@@ -438,7 +439,7 @@ public:
 	bool StartWithContextFromNodeIndex(
 		const FString& ContextString,
 		UDlgDialogue* InDialogue,
-		const TMap<FName, UObject*>& InParticipants,
+		const TMap<FGameplayTag, UObject*>& InParticipants,
 		int32 StartNodeIndex,
 		const FDlgHistory& StartHistory,
 		bool bFireEnterEvents
@@ -462,7 +463,7 @@ public:
 	// Variant that works with only the NodeGUID
 	bool StartFromNodeGUID(
 		UDlgDialogue* InDialogue,
-		const TMap<FName, UObject*>& InParticipants,
+		const TMap<FGameplayTag, UObject*>& InParticipants,
 		const FGuid& StartNodeGUID,
 		const FDlgHistory& StartHistory,
 		bool bFireEnterEvents
@@ -480,7 +481,7 @@ public:
 	bool StartWithContextFromNodeGUID(
 		const FString& ContextString,
 		UDlgDialogue* InDialogue,
-		const TMap<FName, UObject*>& InParticipants,
+		const TMap<FGameplayTag, UObject*>& InParticipants,
 		const FGuid& StartNodeGUID,
 		const FDlgHistory& StartHistory,
 		bool bFireEnterEvents
@@ -506,7 +507,7 @@ public:
 	// Otherwise fallback to the NodeIndex
 	bool StartFromNode(
 		UDlgDialogue* InDialogue,
-		const TMap<FName, UObject*>& InParticipants,
+		const TMap<FGameplayTag, UObject*>& InParticipants,
 		int32 StartNodeIndex,
 		const FGuid& StartNodeGUID,
 		const FDlgHistory& StartHistory,
@@ -526,7 +527,7 @@ public:
 	bool StartWithContextFromNode(
 		const FString& ContextString,
 		UDlgDialogue* InDialogue,
-		const TMap<FName, UObject*>& InParticipants,
+		const TMap<FGameplayTag, UObject*>& InParticipants,
 		int32 StartNodeIndex,
 		const FGuid& StartNodeGUID,
 		const FDlgHistory& StartHistory,
@@ -537,7 +538,7 @@ public:
 	UDlgContext* CreateCopy() const;
 
 	// Checks if the context could be started, used to check if there is any reachable node from the start node
-	static bool CanBeStarted(UDlgDialogue* InDialogue, const TMap<FName, UObject*>& InParticipants);
+	static bool CanBeStarted(UDlgDialogue* InDialogue, const TMap<FGameplayTag, UObject*>& InParticipants);
 
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Context")
 	FString GetContextString() const;
@@ -558,7 +559,7 @@ public:
 	static bool ValidateParticipantsMapForDialogue(
 		const FString& ContextString,
 		const UDlgDialogue* Dialogue,
-		const TMap<FName, UObject*>& ParticipantsMap,
+		const TMap<FGameplayTag, UObject*>& ParticipantsMap,
 		bool bLog = true
 	);
 
@@ -568,16 +569,16 @@ public:
 		const FString& ContextString,
 		const UDlgDialogue* Dialogue,
 		const TArray<UObject*>& ParticipantsArray,
-		TMap<FName, UObject*>& OutParticipantsMap,
+		TMap<FGameplayTag, UObject*>& OutParticipantsMap,
 		bool bLog = true
 	);
 
 protected:
-	// bool StartInternal(UDlgDialogue* InDialogue, const TMap<FName, UObject*>& InParticipants, bool bLog, FString& OutErrorMessage);
+	// bool StartInternal(UDlgDialogue* InDialogue, const TMap<FGameplayTag, UObject*>& InParticipants, bool bLog, FString& OutErrorMessage);
 	void LogErrorWithContext(const FString& ErrorMessage) const;
 	FString GetErrorMessageWithContext(const FString& ErrorMessage) const;
 
-	void SetParticipants(const TMap<FName, UObject*>& InParticipants)
+	void SetParticipants(const TMap<FGameplayTag, UObject*>& InParticipants)
 	{
 		Participants = InParticipants;
 		SerializeParticipants();
@@ -593,9 +594,9 @@ protected:
 	TArray<UObject*> SerializedParticipants;
 
 	// All object is expected to implement the IDlgDialogueParticipant interface
-	// the key is the return value of IDlgDialogueParticipant::GetParticipantName()
+	// the key is the return value of IDlgDialogueParticipant::GetParticipantTag()
 	UPROPERTY()
-	TMap<FName, UObject*> Participants;
+	TMap<FGameplayTag, UObject*> Participants;
 
 	// The index of the active node in the dialogues Nodes array
 	int32 ActiveNodeIndex = INDEX_NONE;

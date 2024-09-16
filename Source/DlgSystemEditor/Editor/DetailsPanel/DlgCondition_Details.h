@@ -4,6 +4,7 @@
 #include "IPropertyTypeCustomization.h"
 #include "Layout/Visibility.h"
 #include "IDetailPropertyRow.h"
+#include "GameplayTagContainer.h"
 
 #include "DlgSystem/DlgDialogue.h"
 #include "DlgSystem/DlgCondition.h"
@@ -59,7 +60,7 @@ private:
 	void OnCompareTypeChanged(bool bForceRefresh);
 
 	// Getters for the visibility of some properties
-	EVisibility GetParticipantNameVisibility() const
+	EVisibility GetParticipantTagVisibility() const
 	{
 		return ConditionType != EDlgConditionType::WasNodeVisited
 			&& ConditionType != EDlgConditionType::HasSatisfiedChild
@@ -180,16 +181,16 @@ private:
 
 	TArray<FName> GetCallbackNamesForParticipant(bool bCurrentOnly, bool bOtherValue) const;
 
-	// Gets the ParticipantNames from all Dialogues.
-	TArray<FName> GetDialoguesParticipantNames() const
+	// Gets the ParticipantTags from all Dialogues.
+	TArray<FGameplayTag> GetDialoguesParticipantTags() const
 	{
-		return UDlgManager::GetDialoguesParticipantNames();
+		return UDlgManager::GetDialoguesParticipantTags();
 	}
 
-	// Gets the current Dialogue Participant Names.
-	TArray<FName> GetCurrentDialogueParticipantNames() const
+	// Gets the current Dialogue Participant Tags.
+	TArray<FGameplayTag> GetCurrentDialogueParticipantTags() const
 	{
-		return FDlgDetailsPanelUtils::GetDialogueSortedParticipantNames(Dialogue);
+		return FDlgDetailsPanelUtils::GetDialogueSortedParticipantTags(Dialogue);
 	}
 
 	// Handler for when text in the editable text box changed
@@ -210,8 +211,8 @@ private:
 	TSharedPtr<IPropertyHandle> StructPropertyHandle;
 
 	// Cache the property handle of some properties
-	TSharedPtr<IPropertyHandle> ParticipantNamePropertyHandle;
-	TSharedPtr<IPropertyHandle> OtherParticipantNamePropertyHandle;
+	TSharedPtr<IPropertyHandle> ParticipantTagPropertyHandle;
+	TSharedPtr<IPropertyHandle> OtherParticipantTagPropertyHandle;
 	TSharedPtr<IPropertyHandle> ConditionTypePropertyHandle;
 	TSharedPtr<IPropertyHandle> CompareTypePropertyHandle;
 	TSharedPtr<IPropertyHandle> IntValuePropertyHandle;
@@ -220,7 +221,8 @@ private:
 	TSharedPtr<IPropertyUtilities> PropertyUtils;
 
 	// Cache the rows of the properties, created in CustomizeChildren
-	TSharedPtr<FDlgTextPropertyPickList_CustomRowHelper> ParticipantNamePropertyRow;
+	IDetailPropertyRow* ParticipantTagPropertyRow;
+	IDetailPropertyRow* ParticipantNamePropertyRow;
 	TSharedPtr<FDlgTextPropertyPickList_CustomRowHelper> CallbackNamePropertyRow;
 	TSharedPtr<FDlgIntTextBox_CustomRowHelper> IntValuePropertyRow;
 
@@ -238,7 +240,8 @@ private:
 	IDetailPropertyRow* ConditionTypePropertyRow = nullptr;
 	TSharedPtr<FDlgEnumTypeWithObject_CustomRowHelper> ConditionTypePropertyRow_CustomDisplay;
 
-	TSharedPtr<FDlgTextPropertyPickList_CustomRowHelper> OtherParticipantNamePropertyRow;
+	IDetailPropertyRow* OtherParticipantTagPropertyRow;
+	IDetailPropertyRow* OtherParticipantNamePropertyRow;
 	TSharedPtr<FDlgTextPropertyPickList_CustomRowHelper> OtherVariableNamePropertyRow;
 
 	// Hold a reference to dialogue we are displaying.

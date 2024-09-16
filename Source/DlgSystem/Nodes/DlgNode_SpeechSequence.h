@@ -3,6 +3,8 @@
 
 #include "DlgSystem/Nodes/DlgNode.h"
 #include "DlgSystem/DlgSystemSettings.h"
+#include "GameplayTagContainer.h"
+
 #include "DlgNode_SpeechSequence.generated.h"
 
 class USoundWave;
@@ -17,8 +19,12 @@ struct DLGSYSTEM_API FDlgSpeechSequenceEntry
 
 public:
 	// The Participant Name (speaker) associated with this speech entry.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Node", Meta = (DisplayName = "Participant Name"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Dialogue|Node", Meta = (DisplayName = "Participant Name", DeprecatedProperty, DeprecationMessage = "Use Participant Tag in stead"))
 	FName Speaker;
+
+	// The Participant Tag (speaker) associated with this speech entry.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Node", Meta = (DisplayName = "Participant Tag", Categories="Dlg"))
+	FGameplayTag SpeakerTag;
 
 	// Text that will appear when this node participant name speaks to someone else.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Node", Meta = (MultiLine = true))
@@ -88,8 +94,8 @@ public:
 	FName GetSpeakerState() const override;
 	void AddAllSpeakerStatesIntoSet(TSet<FName>& OutStates) const override;
 	UObject* GetNodeGenericData() const override;
-	FName GetNodeParticipantName() const override;
-	void GetAssociatedParticipants(TArray<FName>& OutArray) const override;
+	FGameplayTag GetNodeParticipantTag() const override;
+	void GetAssociatedParticipants(TArray<FGameplayTag>& OutArray) const override;
 
 #if WITH_EDITOR
 	FString GetNodeTypeString() const override { return TEXT("Speech Sequence"); }

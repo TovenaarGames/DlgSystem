@@ -69,23 +69,11 @@ void FDlgGraphNode_Details::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
 		// NodeIndex
 		BaseDataCategory.AddProperty(UDialogueGraphNode::GetMemberNameNodeIndex(), UDialogueGraphNode::StaticClass());
 
-		// OwnerName
-		{
-			const TSharedPtr<IPropertyHandle> ParticipantNamePropertyHandle =
-				PropertyDialogueNode->GetChildHandle(UDlgNode::GetMemberNameOwnerName());
-			FDetailWidgetRow* DetailWidgetRow = &BaseDataCategory.AddCustomRow(LOCTEXT("ParticipantNameSearcKey", "Participant Name"));
+		// OwnerTag
+		BaseDataCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode::GetMemberNameOwnerTag()));
 
-			ParticipantNamePropertyRow = MakeShared<FDlgTextPropertyPickList_CustomRowHelper>(DetailWidgetRow, ParticipantNamePropertyHandle);
-			ParticipantNamePropertyRow->SetTextPropertyPickListWidget(
-				SNew(SDlgTextPropertyPickList)
-				.AvailableSuggestions(this, &Self::GetDialoguesParticipantNames)
-				.OnTextCommitted(this, &Self::HandleParticipantTextCommitted)
-				.HasContextCheckbox(true)
-				.IsContextCheckBoxChecked(true)
-				.CurrentContextAvailableSuggestions(this, &Self::GetCurrentDialogueParticipantNames)
-			)
-			.Update();
-		}
+		// OwnerTag
+		BaseDataCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode::GetMemberNameOwnerName()));
 
 		// End Nodes and Proxy Nodes can't have children
 		if (!bIsEndNode && !bIsProxyNode)

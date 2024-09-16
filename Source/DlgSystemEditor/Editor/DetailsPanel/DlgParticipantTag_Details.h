@@ -4,12 +4,13 @@
 #include "IPropertyTypeCustomization.h"
 #include "Layout/Visibility.h"
 #include "IDetailPropertyRow.h"
+#include "GameplayTagContainer.h"
 
 class FDlgTextPropertyPickList_CustomRowHelper;
 
-class DLGSYSTEMEDITOR_API FDlgParticipantName_Details : public IPropertyTypeCustomization
+class DLGSYSTEMEDITOR_API FDlgParticipantTag_Details : public IPropertyTypeCustomization
 {
-	typedef FDlgParticipantName_Details Self;
+	typedef FDlgParticipantTag_Details Self;
 
 public:
 	static TSharedRef<IPropertyTypeCustomization> MakeInstance() { return MakeShared<Self>(); }
@@ -25,12 +26,12 @@ public:
 private:
 
 	/** Gathers selectable options. */
-	TArray<FName> GetAllParticipantNames() const;
+	TArray<FGameplayTag> GetAllParticipantTags() const;
 
 private:
 	// Cache the some property handles
 	TSharedPtr<IPropertyHandle> StructPropertyHandle;
 
 	// Cache the rows of the properties, created in CustomizeChildren
-	TSharedPtr<FDlgTextPropertyPickList_CustomRowHelper> ParticipantNamePropertyRow;
+	IDetailPropertyRow* ParticipantTagPropertyRow;
 };

@@ -3,6 +3,7 @@
 
 #include "DlgSystem/DlgContext.h"
 #include "DlgSystem/DlgConstants.h"
+#include "DlgSystem/DlgHelper.h"
 #include "DlgSystem/Logging/DlgLogger.h"
 #include "DlgSystem/DlgLocalizationHelper.h"
 
@@ -57,7 +58,7 @@ void UDlgNode_Speech::RebuildConstructedText(const UDlgContext& Context)
 	FFormatNamedArguments OrderedArguments;
 	for (const FDlgTextArgument& DlgArgument : TextArguments)
 	{
-		OrderedArguments.Add(DlgArgument.DisplayString, DlgArgument.ConstructFormatArgumentValue(Context, OwnerName));
+		OrderedArguments.Add(DlgArgument.DisplayString, DlgArgument.ConstructFormatArgumentValue(Context, OwnerTag));
 	}
 	ConstructedText = FText::AsCultureInvariant(FText::Format(Text, OrderedArguments));
 }
@@ -135,14 +136,14 @@ bool UDlgNode_Speech::ReevaluateChildren(UDlgContext& Context, TSet<const UDlgNo
 }
 
 
-void UDlgNode_Speech::GetAssociatedParticipants(TArray<FName>& OutArray) const
+void UDlgNode_Speech::GetAssociatedParticipants(TArray<FGameplayTag>& OutArray) const
 {
 	Super::GetAssociatedParticipants(OutArray);
 	for (const FDlgTextArgument& TextArgument : TextArguments)
 	{
-		if (TextArgument.ParticipantName != NAME_None)
+		if (UBSDlgFunctions::IsValidParticipantTag(TextArgument.ParticipantTag))
 		{
-			OutArray.AddUnique(TextArgument.ParticipantName);
+			OutArray.AddUnique(TextArgument.ParticipantTag);
 		}
 	}
 }

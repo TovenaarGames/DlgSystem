@@ -35,22 +35,16 @@ void FDlgSpeechSequenceEntry_Details::CustomizeChildren(TSharedRef<IPropertyHand
 {
 	const bool bHasDialogue = Dialogue != nullptr;
 
-	// Speaker
+	// SpeakerTag
 	{
-		const TSharedPtr<IPropertyHandle> ParticipantNamePropertyHandle =
-			StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgSpeechSequenceEntry, Speaker));
-		FDetailWidgetRow* DetailWidgetRow = &StructBuilder.AddCustomRow(LOCTEXT("ParticipantNameSearchKey", "Participant Name"));
+		ParticipantTagPropertyRow = &StructBuilder.AddProperty(
+			StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgSpeechSequenceEntry, SpeakerTag)).ToSharedRef());
+	}
 
-		ParticipantNamePropertyRow = MakeShared<FDlgTextPropertyPickList_CustomRowHelper>(DetailWidgetRow, ParticipantNamePropertyHandle);
-		ParticipantNamePropertyRow->SetTextPropertyPickListWidget(
-			SNew(SDlgTextPropertyPickList)
-			.AvailableSuggestions(this, &Self::GetDialoguesParticipantNames)
-			.OnTextCommitted(this, &Self::HandleTextCommitted)
-			.HasContextCheckbox(bHasDialogue)
-			.IsContextCheckBoxChecked(true)
-			.CurrentContextAvailableSuggestions(this, &Self::GetCurrentDialogueParticipantNames)
-		)
-		.Update();
+	// SpeakerName
+	{
+		ParticipantNamePropertyRow = &StructBuilder.AddProperty(
+			StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgSpeechSequenceEntry, Speaker)).ToSharedRef());
 	}
 
 	// Text

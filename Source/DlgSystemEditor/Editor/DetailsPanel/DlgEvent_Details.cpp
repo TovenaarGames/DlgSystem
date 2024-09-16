@@ -26,9 +26,9 @@ void FDlgEvent_Details::CustomizeHeader(TSharedRef<IPropertyHandle> InStructProp
 	PropertyUtils = StructCustomizationUtils.GetPropertyUtilities();
 
 	// Cache the Property Handle for the EventType
-	ParticipantNamePropertyHandle = StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgEvent, ParticipantName));
+	ParticipantTagPropertyHandle = StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgEvent, ParticipantTag));
 	EventTypePropertyHandle = StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgEvent, EventType));
-	check(ParticipantNamePropertyHandle.IsValid());
+	check(ParticipantTagPropertyHandle.IsValid());
 	check(EventTypePropertyHandle.IsValid());
 
 	// Register handler for event type change
@@ -51,21 +51,16 @@ void FDlgEvent_Details::CustomizeChildren(TSharedRef<IPropertyHandle> InStructPr
 {
 	const bool bHasDialogue = Dialogue != nullptr;
 
+	// Common ParticipantTag
+	{
+		ParticipantTagPropertyRow = &StructBuilder.AddProperty(
+			StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgEvent, ParticipantTag)).ToSharedRef());
+	}
 
 	// Common ParticipantName
 	{
-		FDetailWidgetRow* DetailWidgetRow = &StructBuilder.AddCustomRow(LOCTEXT("ParticipantNameSearchKey", "Participant Name"));
-
-		ParticipantNamePropertyRow = MakeShared<FDlgTextPropertyPickList_CustomRowHelper>(DetailWidgetRow, ParticipantNamePropertyHandle);
-		ParticipantNamePropertyRow->SetTextPropertyPickListWidget(
-			SNew(SDlgTextPropertyPickList)
-			.AvailableSuggestions(this, &Self::GetDialoguesParticipantNames)
-			.OnTextCommitted(this, &Self::HandleTextCommitted)
-			.HasContextCheckbox(bHasDialogue)
-			.IsContextCheckBoxChecked(true)
-			.CurrentContextAvailableSuggestions(this, &Self::GetCurrentDialogueParticipantNames)
-		)
-		.Update();
+		ParticipantNamePropertyRow = &StructBuilder.AddProperty(
+			StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgEvent, ParticipantName)).ToSharedRef());
 	}
 
 	// EventType
@@ -76,7 +71,7 @@ void FDlgEvent_Details::CustomizeChildren(TSharedRef<IPropertyHandle> InStructPr
 		EventTypePropertyRow_CustomDisplay = MakeShared<FDlgEnumTypeWithObject_CustomRowHelper>(
 			EventTypePropertyRow,
 			Dialogue,
-			ParticipantNamePropertyHandle
+			ParticipantTagPropertyHandle
 		);
 		EventTypePropertyRow_CustomDisplay->SetEnumType(EDialogueEnumWithObjectType::Event);
 		EventTypePropertyRow_CustomDisplay->Update();
@@ -200,36 +195,36 @@ void FDlgEvent_Details::OnEventTypeChanged(bool bForceRefresh)
 TArray<FName> FDlgEvent_Details::GetDialoguesParticipantEventNames() const
 {
 	TArray<FName> Suggestions;
-	const FName ParticipantName = FDlgDetailsPanelUtils::GetParticipantNameFromPropertyHandle(ParticipantNamePropertyHandle.ToSharedRef());
+	const FGameplayTag ParticipantTag = FDlgDetailsPanelUtils::GetParticipantTagFromPropertyHandle(ParticipantTagPropertyHandle.ToSharedRef());
 
 	switch (EventType)
 	{
 	case EDlgEventType::ModifyBool:
-		Suggestions.Append(UDlgManager::GetDialoguesParticipantBoolNames(ParticipantName));
+		Suggestions.Append(UDlgManager::GetDialoguesParticipantBoolNames(ParticipantTag));
 		break;
 
 	case EDlgEventType::ModifyFloat:
-		Suggestions.Append(UDlgManager::GetDialoguesParticipantFloatNames(ParticipantName));
+		Suggestions.Append(UDlgManager::GetDialoguesParticipantFloatNames(ParticipantTag));
 		break;
 
 	case EDlgEventType::ModifyInt:
-		Suggestions.Append(UDlgManager::GetDialoguesParticipantIntNames(ParticipantName));
+		Suggestions.Append(UDlgManager::GetDialoguesParticipantIntNames(ParticipantTag));
 		break;
 
 	case EDlgEventType::ModifyName:
-		Suggestions.Append(UDlgManager::GetDialoguesParticipantFNameNames(ParticipantName));
+		Suggestions.Append(UDlgManager::GetDialoguesParticipantFNameNames(ParticipantTag));
 		break;
 
 	case EDlgEventType::ModifyClassIntVariable:
 		if (Dialogue)
 		{
 			FNYReflectionHelper::GetVariableNames(
-				Dialogue->GetParticipantClass(ParticipantName),
+				Dialogue->GetParticipantClass(ParticipantTag),
 				FIntProperty::StaticClass(),
 				Suggestions,
 				GetDefault<UDlgSystemSettings>()->BlacklistedReflectionClasses
 			);
-			FDlgHelper::SortDefault(Suggestions);
+			FDlgHelper::SortFNameDefault(Suggestions);
 		}
 		break;
 
@@ -237,12 +232,12 @@ TArray<FName> FDlgEvent_Details::GetDialoguesParticipantEventNames() const
 		if (Dialogue)
 		{
 			FNYReflectionHelper::GetVariableNames(
-				Dialogue->GetParticipantClass(ParticipantName),
+				Dialogue->GetParticipantClass(ParticipantTag),
 				FDoubleProperty::StaticClass(),
 				Suggestions,
 				GetDefault<UDlgSystemSettings>()->BlacklistedReflectionClasses
 			);
-			FDlgHelper::SortDefault(Suggestions);
+			FDlgHelper::SortFNameDefault(Suggestions);
 		}
 		break;
 
@@ -250,12 +245,12 @@ TArray<FName> FDlgEvent_Details::GetDialoguesParticipantEventNames() const
 		if (Dialogue)
 		{
 			FNYReflectionHelper::GetVariableNames(
-				Dialogue->GetParticipantClass(ParticipantName),
+				Dialogue->GetParticipantClass(ParticipantTag),
 				FBoolProperty::StaticClass(),
 				Suggestions,
 				GetDefault<UDlgSystemSettings>()->BlacklistedReflectionClasses
 			);
-			FDlgHelper::SortDefault(Suggestions);
+			FDlgHelper::SortFNameDefault(Suggestions);
 		}
 		break;
 
@@ -263,22 +258,22 @@ TArray<FName> FDlgEvent_Details::GetDialoguesParticipantEventNames() const
 		if (Dialogue)
 		{
 			FNYReflectionHelper::GetVariableNames(
-				Dialogue->GetParticipantClass(ParticipantName),
+				Dialogue->GetParticipantClass(ParticipantTag),
 				FNameProperty::StaticClass(),
 				Suggestions,
 				GetDefault<UDlgSystemSettings>()->BlacklistedReflectionClasses
 			);
-			FDlgHelper::SortDefault(Suggestions);
+			FDlgHelper::SortFNameDefault(Suggestions);
 		}
 		break;
 
 	case EDlgEventType::UnrealFunction:
-		Suggestions.Append(GetParticipantFunctionNames(ParticipantName).Array());
+		Suggestions.Append(GetParticipantFunctionNames(ParticipantTag).Array());
 		break;
 
 	case EDlgEventType::Event:
 	default:
-		Suggestions.Append(UDlgManager::GetDialoguesParticipantEventNames(ParticipantName));
+		Suggestions.Append(UDlgManager::GetDialoguesParticipantEventNames(ParticipantTag));
 		break;
 	}
 
@@ -292,30 +287,30 @@ TArray<FName> FDlgEvent_Details::GetCurrentDialogueEventNames() const
 		return {};
 	}
 
-	const FName ParticipantName = FDlgDetailsPanelUtils::GetParticipantNameFromPropertyHandle(ParticipantNamePropertyHandle.ToSharedRef());
+	const FGameplayTag ParticipantTag = FDlgDetailsPanelUtils::GetParticipantTagFromPropertyHandle(ParticipantTagPropertyHandle.ToSharedRef());
 	TSet<FName> Suggestions;
 
 	switch (EventType)
 	{
 	case EDlgEventType::ModifyBool:
-		Suggestions.Append(Dialogue->GetParticipantBoolNames(ParticipantName));
+		Suggestions.Append(Dialogue->GetParticipantBoolNames(ParticipantTag));
 		break;
 
 	case EDlgEventType::ModifyName:
-		Suggestions.Append(Dialogue->GetParticipantFNameNames(ParticipantName));
+		Suggestions.Append(Dialogue->GetParticipantFNameNames(ParticipantTag));
 		break;
 
 	case EDlgEventType::ModifyFloat:
-		Suggestions.Append(Dialogue->GetParticipantFloatNames(ParticipantName));
+		Suggestions.Append(Dialogue->GetParticipantFloatNames(ParticipantTag));
 		break;
 
 	case EDlgEventType::ModifyInt:
-		Suggestions.Append(Dialogue->GetParticipantIntNames(ParticipantName));
+		Suggestions.Append(Dialogue->GetParticipantIntNames(ParticipantTag));
 		break;
 
 	case EDlgEventType::ModifyClassIntVariable:
 		FNYReflectionHelper::GetVariableNames(
-			Dialogue->GetParticipantClass(ParticipantName),
+			Dialogue->GetParticipantClass(ParticipantTag),
 			FIntProperty::StaticClass(),
 			Suggestions,
 			GetDefault<UDlgSystemSettings>()->BlacklistedReflectionClasses
@@ -324,7 +319,7 @@ TArray<FName> FDlgEvent_Details::GetCurrentDialogueEventNames() const
 
 	case EDlgEventType::ModifyClassFloatVariable:
 		FNYReflectionHelper::GetVariableNames(
-			Dialogue->GetParticipantClass(ParticipantName),
+			Dialogue->GetParticipantClass(ParticipantTag),
 			FDoubleProperty::StaticClass(),
 			Suggestions,
 			GetDefault<UDlgSystemSettings>()->BlacklistedReflectionClasses
@@ -333,7 +328,7 @@ TArray<FName> FDlgEvent_Details::GetCurrentDialogueEventNames() const
 
 	case EDlgEventType::ModifyClassBoolVariable:
 		FNYReflectionHelper::GetVariableNames(
-			Dialogue->GetParticipantClass(ParticipantName),
+			Dialogue->GetParticipantClass(ParticipantTag),
 			FBoolProperty::StaticClass(),
 			Suggestions,
 			GetDefault<UDlgSystemSettings>()->BlacklistedReflectionClasses
@@ -342,7 +337,7 @@ TArray<FName> FDlgEvent_Details::GetCurrentDialogueEventNames() const
 
 	case EDlgEventType::ModifyClassNameVariable:
 		FNYReflectionHelper::GetVariableNames(
-			Dialogue->GetParticipantClass(ParticipantName),
+			Dialogue->GetParticipantClass(ParticipantTag),
 			FNameProperty::StaticClass(),
 			Suggestions,
 			GetDefault<UDlgSystemSettings>()->BlacklistedReflectionClasses
@@ -350,26 +345,26 @@ TArray<FName> FDlgEvent_Details::GetCurrentDialogueEventNames() const
 		break;
 
 	case EDlgEventType::UnrealFunction:
-		Suggestions.Append(GetParticipantFunctionNames(ParticipantName));
+		Suggestions.Append(GetParticipantFunctionNames(ParticipantTag));
 		break;
 
 	case EDlgEventType::Event:
 	default:
-		Suggestions.Append(Dialogue->GetParticipantEventNames(ParticipantName));
+		Suggestions.Append(Dialogue->GetParticipantEventNames(ParticipantTag));
 		break;
 	}
 
-	FDlgHelper::SortDefault(Suggestions);
+	FDlgHelper::SortFNameDefault(Suggestions);
 	return Suggestions.Array();
 }
 
-TSet<FName> FDlgEvent_Details::GetParticipantFunctionNames(FName ParticipantName) const
+TSet<FName> FDlgEvent_Details::GetParticipantFunctionNames(const FGameplayTag& ParticipantTag) const
 {
 	if (Dialogue == nullptr)
 	{
 		return {};
 	}
-	UClass* ParticipantClass = Dialogue->GetParticipantClass(ParticipantName);
+	UClass* ParticipantClass = Dialogue->GetParticipantClass(ParticipantTag);
 	if (ParticipantClass == nullptr)
 	{
 		return {};

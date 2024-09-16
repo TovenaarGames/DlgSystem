@@ -10,6 +10,7 @@
 #include "EditorStyleSet.h"
 
 #include "DlgSystem/DlgManager.h"
+#include "DlgSystem/DlgHelper.h"
 #include "DlgBlueprintUtilities.h"
 
 #define LOCTEXT_NAMESPACE "DlgK2Node_Select"
@@ -521,8 +522,8 @@ bool UDialogueK2Node_Select::RefreshPinNames()
 
 	// Stop anything if the blueprint is loading, this can happen because we now have reference to blueprint UClasses (reflection system) from the UDlgDialogue
 	static constexpr bool bBlueprintMustBeLoaded = true;
-	const FName ParticipantName = FDlgBlueprintUtilities::GetParticipantNameFromNode(this, bBlueprintMustBeLoaded);
-	if (ParticipantName == NAME_None && VariableType != EDlgVariableType::SpeakerState)
+	const FGameplayTag ParticipantTag = FDlgBlueprintUtilities::GetParticipantTagFromNode(this, bBlueprintMustBeLoaded);
+	if (!UBSDlgFunctions::IsValidParticipantTag(ParticipantTag) && VariableType != EDlgVariableType::SpeakerState)
 	{
 		return false;
 	}
@@ -532,15 +533,15 @@ bool UDialogueK2Node_Select::RefreshPinNames()
 	switch (VariableType)
 	{
 		case EDlgVariableType::Float:
-			NewPinNames.Append(UDlgManager::GetDialoguesParticipantFloatNames(ParticipantName));
+			NewPinNames.Append(UDlgManager::GetDialoguesParticipantFloatNames(ParticipantTag));
 			break;
 
 		case EDlgVariableType::Int:
-			NewPinNames.Append(UDlgManager::GetDialoguesParticipantIntNames(ParticipantName));
+			NewPinNames.Append(UDlgManager::GetDialoguesParticipantIntNames(ParticipantTag));
 			break;
 
 		case EDlgVariableType::Name:
-			NewPinNames.Append(UDlgManager::GetDialoguesParticipantFNameNames(ParticipantName));
+			NewPinNames.Append(UDlgManager::GetDialoguesParticipantFNameNames(ParticipantTag));
 			break;
 
 		case EDlgVariableType::SpeakerState:

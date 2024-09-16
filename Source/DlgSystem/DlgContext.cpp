@@ -43,7 +43,7 @@ void UDlgContext::OnRep_SerializedParticipants()
 	{
 		if (IsValid(Participant))
 		{
-			Participants.Add(IDlgDialogueParticipant::Execute_GetParticipantName(Participant), Participant);
+			Participants.Add(IDlgDialogueParticipant::Execute_GetParticipantTag(Participant), Participant);
 		}
 	}
 }
@@ -302,18 +302,18 @@ UTexture2D* UDlgContext::GetActiveNodeParticipantIcon() const
 		return nullptr;
 	}
 
-	const FName SpeakerName = Node->GetNodeParticipantName();
-	auto* ObjectPtr = Participants.Find(SpeakerName);
+	const FGameplayTag& SpeakerTag = Node->GetNodeParticipantTag();
+	auto* ObjectPtr = Participants.Find(SpeakerTag);
 	if (ObjectPtr == nullptr || !IsValid(*ObjectPtr))
 	{
 		LogErrorWithContext(FString::Printf(
-			TEXT("GetActiveNodeParticipantIcon - The ParticipantName = `%s` from the Active Node does NOT exist in the current Participants"),
-			*SpeakerName.ToString()
+			TEXT("GetActiveNodeParticipantIcon - The ParticipantTag = `%s` from the Active Node does NOT exist in the current Participants"),
+			*SpeakerTag.ToString()
 		));
 		return nullptr;
 	}
 
-	return IDlgDialogueParticipant::Execute_GetParticipantIcon(*ObjectPtr, SpeakerName, Node->GetSpeakerState());
+	return IDlgDialogueParticipant::Execute_GetParticipantIcon(*ObjectPtr, SpeakerTag, Node->GetSpeakerState());
 }
 
 UObject* UDlgContext::GetActiveNodeParticipant() const
@@ -325,13 +325,13 @@ UObject* UDlgContext::GetActiveNodeParticipant() const
 		return nullptr;
 	}
 
-	const FName SpeakerName = Node->GetNodeParticipantName();
-	auto* ObjectPtr = Participants.Find(Node->GetNodeParticipantName());
+	const FGameplayTag& SpeakerTag = Node->GetNodeParticipantTag();
+	auto* ObjectPtr = Participants.Find(Node->GetNodeParticipantTag());
 	if (ObjectPtr == nullptr || !IsValid(*ObjectPtr))
 	{
 		LogErrorWithContext(FString::Printf(
-			TEXT("GetActiveNodeParticipant - The ParticipantName = `%s` from the Active Node does NOT exist in the current Participants"),
-			*SpeakerName.ToString()
+			TEXT("GetActiveNodeParticipant - The ParticipantTag = `%s` from the Active Node does NOT exist in the current Participants"),
+			*SpeakerTag.ToString()
 		));
 		return nullptr;
 	}
@@ -339,16 +339,16 @@ UObject* UDlgContext::GetActiveNodeParticipant() const
 	return *ObjectPtr;
 }
 
-FName UDlgContext::GetActiveNodeParticipantName() const
+FGameplayTag UDlgContext::GetActiveNodeParticipantTag() const
 {
 	const UDlgNode* Node = GetActiveNode();
 	if (!IsValid(Node))
 	{
-		LogErrorWithContext(TEXT("GetActiveNodeParticipantName - INVALID Active Node"));
-		return NAME_None;
+		LogErrorWithContext(TEXT("GetActiveNodeParticipantTag - INVALID Active Node"));
+		return FGameplayTag::EmptyTag;
 	}
 
-	return Node->GetNodeParticipantName();
+	return Node->GetNodeParticipantTag();
 }
 
 FText UDlgContext::GetActiveNodeParticipantDisplayName() const
@@ -360,23 +360,23 @@ FText UDlgContext::GetActiveNodeParticipantDisplayName() const
 		return FText::GetEmpty();
 	}
 
-	const FName SpeakerName = Node->GetNodeParticipantName();
-	auto* ObjectPtr = Participants.Find(SpeakerName);
+	const FGameplayTag& SpeakerTag = Node->GetNodeParticipantTag();
+	auto* ObjectPtr = Participants.Find(SpeakerTag);
 	if (ObjectPtr == nullptr || !IsValid(*ObjectPtr))
 	{
 		LogErrorWithContext(FString::Printf(
-			TEXT("GetActiveNodeParticipantDisplayName - The ParticipantName = `%s` from the Active Node does NOT exist in the current Participants"),
-			*SpeakerName.ToString()
+			TEXT("GetActiveNodeParticipantDisplayName - The ParticipantTag = `%s` from the Active Node does NOT exist in the current Participants"),
+			*SpeakerTag.ToString()
 		));
 		return FText::GetEmpty();
 	}
 
-	return IDlgDialogueParticipant::Execute_GetParticipantDisplayName(*ObjectPtr, SpeakerName);
+	return IDlgDialogueParticipant::Execute_GetParticipantDisplayName(*ObjectPtr, SpeakerTag);
 }
 
-UObject* UDlgContext::GetMutableParticipant(FName ParticipantName) const
+UObject* UDlgContext::GetMutableParticipant(const FGameplayTag& ParticipantTag) const
 {
-	auto* ParticipantPtr = Participants.Find(ParticipantName);
+	auto* ParticipantPtr = Participants.Find(ParticipantTag);
 	if (ParticipantPtr != nullptr && IsValid(*ParticipantPtr))
 	{
 		return *ParticipantPtr;
@@ -385,9 +385,9 @@ UObject* UDlgContext::GetMutableParticipant(FName ParticipantName) const
 	return nullptr;
 }
 
-const UObject* UDlgContext::GetParticipant(FName ParticipantName) const
+const UObject* UDlgContext::GetParticipant(const FGameplayTag& ParticipantTag) const
 {
-	auto* ParticipantPtr = Participants.Find(ParticipantName);
+	auto* ParticipantPtr = Participants.Find(ParticipantTag);
 	if (ParticipantPtr != nullptr && IsValid(*ParticipantPtr))
 	{
 		return *ParticipantPtr;
@@ -396,9 +396,9 @@ const UObject* UDlgContext::GetParticipant(FName ParticipantName) const
 	return nullptr;
 }
 
-UObject* UDlgContext::GetParticipantFromName(const FDlgParticipantName& Participant)
+UObject* UDlgContext::GetParticipantFromName(const FDlgParticipantTag& Participant)
 {
-	if (UObject** ParticipantObjectPtr = Participants.Find(Participant.ParticipantName))
+	if (UObject** ParticipantObjectPtr = Participants.Find(Participant.ParticipantTag))
 	{
 		return *ParticipantObjectPtr;
 	}
@@ -628,7 +628,7 @@ bool UDlgContext::IsNodeEnterable(int32 NodeIndex, TSet<const UDlgNode*> Already
 	return false;
 }
 
-bool UDlgContext::CanBeStarted(UDlgDialogue* InDialogue, const TMap<FName, UObject*>& InParticipants)
+bool UDlgContext::CanBeStarted(UDlgDialogue* InDialogue, const TMap<FGameplayTag, UObject*>& InParticipants)
 {
 	if (!ValidateParticipantsMapForDialogue(TEXT("CanBeStarted"), InDialogue, InParticipants, false))
 	{
@@ -672,7 +672,7 @@ bool UDlgContext::CanBeStarted(UDlgDialogue* InDialogue, const TMap<FName, UObje
 	return false;
 }
 
-bool UDlgContext::StartWithContext(const FString& ContextString, UDlgDialogue* InDialogue, const TMap<FName, UObject*>& InParticipants)
+bool UDlgContext::StartWithContext(const FString& ContextString, UDlgDialogue* InDialogue, const TMap<FGameplayTag, UObject*>& InParticipants)
 {
 	const FString ContextMessage = ContextString.IsEmpty()
 		? TEXT("Start")
@@ -711,7 +711,7 @@ bool UDlgContext::StartWithContext(const FString& ContextString, UDlgDialogue* I
 bool UDlgContext::StartWithContextFromNode(
 	const FString& ContextString,
 	UDlgDialogue* InDialogue,
-	const TMap<FName, UObject*>& InParticipants,
+	const TMap<FGameplayTag, UObject*>& InParticipants,
 	int32 StartNodeIndex,
 	const FGuid& StartNodeGUID,
 	const FDlgHistory& StartHistory,
@@ -883,7 +883,7 @@ bool UDlgContext::ValidateParticipantForDialogue(
 bool UDlgContext::ValidateParticipantsMapForDialogue(
 	const FString& ContextString,
 	const UDlgDialogue* Dialogue,
-	const TMap<FName, UObject*>& ParticipantsMap,
+	const TMap<FGameplayTag, UObject*>& ParticipantsMap,
 	bool bLog
 )
 {
@@ -909,15 +909,15 @@ bool UDlgContext::ValidateParticipantsMapForDialogue(
 	}
 
 	// Check if at least these participants are required
-	const TMap<FName, FDlgParticipantData>& DialogueParticipants = Dialogue->GetParticipantsData();
-	TArray<FName> ParticipantsRequiredArray;
+	const TMap<FGameplayTag, FDlgParticipantData>& DialogueParticipants = Dialogue->GetParticipantsData();
+	TArray<FGameplayTag> ParticipantsRequiredArray;
 	const int32 ParticipantsNum = DialogueParticipants.GetKeys(ParticipantsRequiredArray);
-	TSet<FName> ParticipantsRequiredSet{ParticipantsRequiredArray};
+	TSet<FGameplayTag> ParticipantsRequiredSet{ParticipantsRequiredArray};
 
 	// Iterate over Map
 	for (const auto& KeyValue : ParticipantsMap)
 	{
-		const FName ParticipantName = KeyValue.Key;
+		const FGameplayTag ParticipantTag = KeyValue.Key;
 		const UObject* Participant = KeyValue.Value;
 
 		// We must check this otherwise we can't get the name
@@ -926,18 +926,18 @@ bool UDlgContext::ValidateParticipantsMapForDialogue(
 			return false;
 		}
 
-		// Check the Map Key matches the Participant Name
+		// Check the Map Key matches the Participant Tag
 		// This should only happen if you constructed the map incorrectly by mistake
 		// If you used ConvertArrayOfParticipantsToMap this should have NOT happened
 		{
-			const FName ObjectParticipantName = IDlgDialogueParticipant::Execute_GetParticipantName(Participant);
-			if (ParticipantName != ObjectParticipantName)
+			const FGameplayTag ObjectParticipantTag = IDlgDialogueParticipant::Execute_GetParticipantTag(Participant);
+			if (!ParticipantTag.MatchesTagExact(ObjectParticipantTag))
 			{
 				if (bLog)
 				{
 					FDlgLogger::Get().Errorf(
-						TEXT("%s - The Map has a KEY Participant Name = `%s` DIFFERENT to the VALUE of the Participant Path = `%s` with the Name = `%s` (KEY Participant Name != VALUE Participant Name)"),
-						*ContextMessage, *ParticipantName.ToString(), *Participant->GetPathName(), *ObjectParticipantName.ToString()
+						TEXT("%s - The Map has a KEY Participant Tag = `%s` DIFFERENT to the VALUE of the Participant Path = `%s` with the Name = `%s` (KEY Participant Tag != VALUE Participant Tag)"),
+						*ContextMessage, *ParticipantTag.ToString(), *Participant->GetPathName(), *ObjectParticipantTag.ToString()
 					);
 				}
 				return false;
@@ -945,9 +945,9 @@ bool UDlgContext::ValidateParticipantsMapForDialogue(
 		}
 
 		// We found one participant from our set
-		if (ParticipantsRequiredSet.Contains(ParticipantName))
+		if (ParticipantsRequiredSet.Contains(ParticipantTag))
 		{
-			ParticipantsRequiredSet.Remove(ParticipantName);
+			ParticipantsRequiredSet.Remove(ParticipantTag);
 		}
 		else
 		{
@@ -955,8 +955,8 @@ bool UDlgContext::ValidateParticipantsMapForDialogue(
 			if (bLog)
 			{
 				FDlgLogger::Get().Warningf(
-					TEXT("%s - Participant Path = `%s` with Participant Name = `%s` is NOT referenced (DOES) not exist inside the Dialogue. It is going to be IGNORED.\nContext:\n\tDialogue = `%s`"),
-					*ContextMessage, *Participant->GetPathName(), *ParticipantName.ToString(), *Dialogue->GetPathName()
+					TEXT("%s - Participant Path = `%s` with Participant Tag = `%s` is NOT referenced (DOES) not exist inside the Dialogue. It is going to be IGNORED.\nContext:\n\tDialogue = `%s`"),
+					*ContextMessage, *Participant->GetPathName(), *ParticipantTag.ToString(), *Dialogue->GetPathName()
 				);
 			}
 		}
@@ -989,7 +989,7 @@ bool UDlgContext::ConvertArrayOfParticipantsToMap(
 	const FString& ContextString,
 	const UDlgDialogue* Dialogue,
 	const TArray<UObject*>& ParticipantsArray,
-	TMap<FName, UObject*>& OutParticipantsMap,
+	TMap<FGameplayTag, UObject*>& OutParticipantsMap,
 	bool bLog
 )
 {
@@ -1024,20 +1024,20 @@ bool UDlgContext::ConvertArrayOfParticipantsToMap(
 
 		// Is Duplicate?
 		// Just warn the user about it, but still continue our conversion
-		const FName ParticipantName = IDlgDialogueParticipant::Execute_GetParticipantName(Participant);
-		if (OutParticipantsMap.Contains(ParticipantName))
+		const FGameplayTag ParticipantTag = IDlgDialogueParticipant::Execute_GetParticipantTag(Participant);
+		if (OutParticipantsMap.Contains(ParticipantTag))
 		{
 			if (bLog)
 			{
 				FDlgLogger::Get().Warningf(
-					TEXT("%s - Participant Path = `%s`, Participant Name = `%s` already exists in the Array. Ignoring it!"),
-					*ContextMessageWithIndex, *Participant->GetPathName(), *ParticipantName.ToString()
+					TEXT("%s - Participant Path = `%s`, Participant Tag = `%s` already exists in the Array. Ignoring it!"),
+					*ContextMessageWithIndex, *Participant->GetPathName(), *ParticipantTag.ToString()
 				);
 			}
 			continue;
 		}
 
-		OutParticipantsMap.Add(ParticipantName, Participant);
+		OutParticipantsMap.Add(ParticipantTag, Participant);
 	}
 
 	return true;

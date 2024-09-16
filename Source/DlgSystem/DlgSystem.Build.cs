@@ -24,7 +24,8 @@ public class DlgSystem : ModuleRules
 			new string[] {
 				"Core",
 				"Json",
-				"JsonUtilities"
+				"JsonUtilities",
+				"GameplayTags"
 				// ... add other public dependencies that you statically link with here ...
 			});
 

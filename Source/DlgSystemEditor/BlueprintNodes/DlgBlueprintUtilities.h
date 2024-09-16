@@ -3,6 +3,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet2/BlueprintEditorUtils.h"
+#include "GameplayTagContainer.h"
 
 #include "DlgSystem/DlgDialogueParticipant.h"
 #include "DlgSystem/DlgManager.h"
@@ -41,21 +42,21 @@ public:
 	 * Tries to get the dialogue name... it expects the owner of the node to implement IDlgDialogueParticipant interface
 	 * @return		the participant name on success or NAME_None on failure.
 	 */
-	static FName GetParticipantNameFromNode(const UK2Node* Node, bool bBlueprintMustBeLoaded)
+	static FGameplayTag GetParticipantTagFromNode(const UK2Node* Node, bool bBlueprintMustBeLoaded)
 	{
 		if (const UBlueprint* Blueprint = GetBlueprintForGraphNode(Node))
 		{
 			if (bBlueprintMustBeLoaded && !IsBlueprintLoaded(Blueprint))
 			{
-				return NAME_None;
+				return FGameplayTag::EmptyTag;
 			}
 
 			if (UDlgManager::DoesObjectImplementDialogueParticipantInterface(Blueprint))
 			{
-				return IDlgDialogueParticipant::Execute_GetParticipantName(Blueprint->GeneratedClass->GetDefaultObject());
+				return IDlgDialogueParticipant::Execute_GetParticipantTag(Blueprint->GeneratedClass->GetDefaultObject());
 			}
 		}
 
-		return NAME_None;
+		return FGameplayTag::EmptyTag;
 	}
 };

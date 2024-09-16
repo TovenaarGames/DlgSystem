@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 
 #include "DlgSystem/TreeViewHelpers/DlgTreeViewNode.h"
 
@@ -103,8 +104,8 @@ class FDlgBrowserTreeNode : public FDlgTreeViewNode<FDlgBrowserTreeNode>
 public:
 	FDlgBrowserTreeNode(const FText& InDisplayText, const TSharedPtr<Self>& InParent);
 
-	/** Gets the Participant Name that this Node belongs to. This must always return a valid value. */
-	virtual FName GetParentParticipantName() const;
+	/** Gets the Participant Tag that this Node belongs to. This must always return a valid value. */
+	virtual FGameplayTag GetParentParticipantTag() const;
 
 	/** Gets the Variable name that this Node belongs to if any. This could be empty in most cases. */
 	virtual FName GetParentVariableName() const;
@@ -218,7 +219,7 @@ public:
 		return TextType == Other.GetTextType() &&
 			CategoryType == Other.GetCategoryType() &&
 			DisplayText.EqualTo(Other.GetDisplayText()) &&
-			GetParentParticipantName() == Other.GetParentParticipantName() &&
+			GetParentParticipantTag().MatchesTagExact(Other.GetParentParticipantTag()) &&
 			GetParentVariableName() == Other.GetParentVariableName();
 	}
 
@@ -319,15 +320,15 @@ public:
 	FDialogueBrowserTreeParticipantNode(
 		const FText& InDisplayText,
 		const TSharedPtr<FDlgBrowserTreeNode>& InParent,
-		FName InParticipantName
+		const FGameplayTag& InParticipantTag
 	);
 
-	// ParticipantName:
-	FName GetParentParticipantName() const override;
+	// ParticipantTag:
+	FGameplayTag GetParentParticipantTag() const override;
 
 protected:
-	/** The Participant Name it represents. */
-	FName ParticipantName = NAME_None;
+	/** The Participant Tag it represents. */
+	FGameplayTag ParticipantTag = FGameplayTag::EmptyTag;
 };
 
 
@@ -383,7 +384,7 @@ public:
 	FDialogueBrowserTreeCategoryParticipantNode(
 		const FText& InDisplayText,
 		const TSharedPtr<FDlgBrowserTreeNode>& InParent,
-		FName InParticipantName
+		const FGameplayTag& InParticipantTag
 	);
 
 	bool IsText() const override { return false; }

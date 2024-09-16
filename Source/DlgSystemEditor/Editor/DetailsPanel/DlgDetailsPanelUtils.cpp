@@ -82,35 +82,39 @@ UDlgDialogue* FDlgDetailsPanelUtils::GetDialogueFromPropertyHandle(const TShared
 	return Dialogue;
 }
 
-FName FDlgDetailsPanelUtils::GetParticipantNameFromPropertyHandle(const TSharedRef<IPropertyHandle>& ParticipantNamePropertyHandle)
+FGameplayTag FDlgDetailsPanelUtils::GetParticipantTagFromPropertyHandle(const TSharedRef<IPropertyHandle>& ParticipantTagPropertyHandle)
 {
-	FName ParticipantName = NAME_None;
-	if (ParticipantNamePropertyHandle->GetValue(ParticipantName) != FPropertyAccess::Success)
+	FString GameplayTagAsString;
+	if (!ParticipantTagPropertyHandle->IsCustomized() ||
+		ParticipantTagPropertyHandle->GetValueAsFormattedString(GameplayTagAsString) != FPropertyAccess::Success)
 	{
-		return ParticipantName;
+		return FGameplayTag::EmptyTag;
 	}
 
+	// Convert the string back to an FGameplayTag
+	FGameplayTag ParticipantTag = FGameplayTag::RequestGameplayTag(FName(*GameplayTagAsString));
+
 	// Try the node that owns this
-	if (ParticipantName.IsNone())
+	if (ParticipantTag.MatchesTagExact(FGameplayTag::EmptyTag))
 	{
 		// Possible edge?
-		if (UDialogueGraphNode* GraphNode = GetClosestGraphNodeFromPropertyHandle(ParticipantNamePropertyHandle))
+		if (UDialogueGraphNode* GraphNode = GetClosestGraphNodeFromPropertyHandle(ParticipantTagPropertyHandle))
 		{
-			return GraphNode->GetDialogueNode().GetNodeParticipantName();
+			return GraphNode->GetDialogueNode().GetNodeParticipantTag();
 		}
 	}
 
-	return ParticipantName;
+	return ParticipantTag;
 }
 
-TArray<FName> FDlgDetailsPanelUtils::GetDialogueSortedParticipantNames(UDlgDialogue* Dialogue)
+TArray<FGameplayTag> FDlgDetailsPanelUtils::GetDialogueSortedParticipantTags(UDlgDialogue* Dialogue)
 {
 	if (Dialogue == nullptr)
 	{
 		return {};
 	}
 
-	TSet<FName> ParticipantNames = Dialogue->GetParticipantNames();
-	FDlgHelper::SortDefault(ParticipantNames);
-	return ParticipantNames.Array();
+	TArray<FGameplayTag> ParticipantTags = Dialogue->GetParticipantTags().GetGameplayTagArray();
+	FDlgHelper::SortTagDefault(ParticipantTags);
+	return ParticipantTags;
 }

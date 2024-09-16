@@ -3,6 +3,7 @@
 
 #include "CoreMinimal.h"
 #include "DlgTextArgumentCustom.h"
+#include "GameplayTagContainer.h"
 
 #include "DlgTextArgument.generated.h"
 
@@ -63,7 +64,7 @@ public:
 	{
 		return	DisplayString == Other.DisplayString &&
 			Type == Other.Type &&
-			ParticipantName == Other.ParticipantName &&
+			ParticipantTag.MatchesTagExact(Other.ParticipantTag) &&
 			VariableName == Other.VariableName &&
 			CustomTextArgument == Other.CustomTextArgument;
 	}
@@ -73,7 +74,7 @@ public:
 	//
 
 	// Construct the argument for usage in FText::Format
-	FFormatArgumentValue ConstructFormatArgumentValue(const UDlgContext& Context, FName NodeOwner) const;
+	FFormatArgumentValue ConstructFormatArgumentValue(const UDlgContext& Context, const FGameplayTag& NodeOwner) const;
 
 	// Helper method to update the array InOutArgumentArray with the new arguments from Text.
 	static void UpdateTextArgumentArray(const FText& Text, TArray<FDlgTextArgument>& InOutArgumentArray);
@@ -87,8 +88,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|TextArgument")
 	EDlgTextArgumentType Type = EDlgTextArgumentType::DisplayName;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|TextArgument")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Dialogue|TextArgument", meta=(DeprecatedProperty, DeprecatedMessage="Use ParticipantTag"))
 	FName ParticipantName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|TextArgument")
+	FGameplayTag ParticipantTag;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|TextArgument")
 	FName VariableName;

@@ -1,6 +1,8 @@
 // Copyright Csaba Molnar, Daniel Butum. All Rights Reserved.
 #include "DlgBrowserTreeNode.h"
 
+#include "DlgSystem/DlgHelper.h"
+
 #include "DlgSystemEditor/DlgEditorUtilities.h"
 #include "DlgSystemEditor/Editor/Nodes/DialogueGraphNode.h"
 #include "DlgSystemEditor/Editor/Nodes/DialogueGraphNode_Edge.h"
@@ -12,14 +14,14 @@ FDlgBrowserTreeNode::FDlgBrowserTreeNode(const FText& InDisplayText, const TShar
 {
 }
 
-FName FDlgBrowserTreeNode::GetParentParticipantName() const
+FGameplayTag FDlgBrowserTreeNode::GetParentParticipantTag() const
 {
 	if (Parent.IsValid())
 	{
-		return Parent.Pin()->GetParentParticipantName();
+		return Parent.Pin()->GetParentParticipantTag();
 	}
 
-	return NAME_None;
+	return FGameplayTag::EmptyTag;
 }
 
 FName FDlgBrowserTreeNode::GetParentVariableName() const
@@ -123,19 +125,19 @@ FDialogueBrowserTreeCategoryNode::FDialogueBrowserTreeCategoryNode(
 FDialogueBrowserTreeParticipantNode::FDialogueBrowserTreeParticipantNode(
 	const FText& InDisplayText,
 	const TSharedPtr<FDlgBrowserTreeNode>& InParent,
-	FName InParticipantName
-) : Super(InDisplayText, InParent), ParticipantName(InParticipantName)
+	const FGameplayTag& InParticipantTag
+) : Super(InDisplayText, InParent), ParticipantTag(InParticipantTag)
 {
 }
 
-FName FDialogueBrowserTreeParticipantNode::GetParentParticipantName() const
+FGameplayTag FDialogueBrowserTreeParticipantNode::GetParentParticipantTag() const
 {
-	if (ParticipantName.IsValid() && !ParticipantName.IsNone())
+	if (UBSDlgFunctions::IsValidParticipantTag(ParticipantTag))
 	{
-		return ParticipantName;
+		return ParticipantTag;
 	}
 
-	return Super::GetParentParticipantName();
+	return Super::GetParentParticipantTag();
 }
 
 
@@ -176,8 +178,8 @@ FDialogueBrowserTreeCustomObjectNode::FDialogueBrowserTreeCustomObjectNode(
 FDialogueBrowserTreeCategoryParticipantNode::FDialogueBrowserTreeCategoryParticipantNode(
 	const FText& InDisplayText,
 	const TSharedPtr<FDlgBrowserTreeNode>& InParent,
-	FName InParticipantName
-) : Super(InDisplayText, InParent, InParticipantName)
+	const FGameplayTag& InParticipantTag
+) : Super(InDisplayText, InParent, InParticipantTag)
 {
 	CategoryType = EDlgTreeNodeCategoryType::Participant;
 }

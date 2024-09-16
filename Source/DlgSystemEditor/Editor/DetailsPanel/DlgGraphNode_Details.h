@@ -3,6 +3,7 @@
 
 #include "IDetailCustomization.h"
 #include "IDetailPropertyRow.h"
+#include "GameplayTagContainer.h"
 
 #include "DlgSystem/DlgManager.h"
 #include "DlgSystemEditor/Editor/Nodes/DialogueGraphNode.h"
@@ -34,16 +35,16 @@ private:
 	void HandleTextCommitted(const FText& InText, ETextCommit::Type CommitInfo);
 	void HandleTextChanged(const FText& InText);
 
-	/** Gets the ParticipantNames from all Dialogues. */
-	TArray<FName> GetDialoguesParticipantNames() const
+	/** Gets the ParticipantTags from all Dialogues. */
+	TArray<FGameplayTag> GetDialoguesParticipantTags() const
 	{
-		return UDlgManager::GetDialoguesParticipantNames();
+		return UDlgManager::GetDialoguesParticipantTags();
 	}
 
-	/** Gets the current Dialogue Participant Names. */
-	TArray<FName> GetCurrentDialogueParticipantNames() const
+	/** Gets the current Dialogue Participant Tags. */
+	TArray<FGameplayTag> GetCurrentDialogueParticipantTags() const
 	{
-		return FDlgDetailsPanelUtils::GetDialogueSortedParticipantNames(Dialogue);
+		return FDlgDetailsPanelUtils::GetDialogueSortedParticipantTags(Dialogue);
 	}
 
 	/** Gets the Speaker States from all Dialogues. */
@@ -77,7 +78,8 @@ private:
 	TSharedPtr<IPropertyHandle> TextPropertyHandle;
 
 	// Property rows
-	TSharedPtr<FDlgTextPropertyPickList_CustomRowHelper> ParticipantNamePropertyRow;
+	IDetailPropertyRow* ParticipantTagPropertyRow;
+	IDetailPropertyRow* ParticipantNamePropertyRow;
 	TSharedPtr<FDlgTextPropertyPickList_CustomRowHelper> SpeakerStatePropertyRow;
 	TSharedPtr<FDlgMultiLineEditableTextBox_CustomRowHelper> TextPropertyRow;
 	TSharedPtr<FDlgIntTextBox_CustomRowHelper> NodeIndexPropertyRow;

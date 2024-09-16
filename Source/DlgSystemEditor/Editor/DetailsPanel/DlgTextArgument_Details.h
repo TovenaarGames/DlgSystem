@@ -3,6 +3,7 @@
 
 #include "IPropertyTypeCustomization.h"
 #include "Layout/Visibility.h"
+#include "GameplayTagContainer.h"
 
 #include "DlgSystem/DlgTextArgument.h"
 #include "DlgDetailsPanelUtils.h"
@@ -79,16 +80,16 @@ private:
 	TArray<FName> GetDialogueVariableNames(bool bCurrentOnly) const;
 
 
-	/** Gets the ParticipantNames from all Dialogues. */
-	TArray<FName> GetDialoguesParticipantNames() const
+	/** Gets the ParticipantTags from all Dialogues. */
+	TArray<FGameplayTag> GetDialoguesParticipantTags() const
 	{
-		return UDlgManager::GetDialoguesParticipantNames();
+		return UDlgManager::GetDialoguesParticipantTags();
 	}
 
-	/** Gets the current Dialogue Participant Names. */
-	TArray<FName> GetCurrentDialogueParticipantNames() const
+	/** Gets the current Dialogue Participant Tags. */
+	TArray<FGameplayTag> GetCurrentDialogueParticipantTags() const
 	{
-		return FDlgDetailsPanelUtils::GetDialogueSortedParticipantNames(Dialogue);
+		return FDlgDetailsPanelUtils::GetDialogueSortedParticipantTags(Dialogue);
 	}
 
 	/** Handler for when text in the editable text box changed */
@@ -106,7 +107,7 @@ private:
 
 	// Cache the some property handles
 	TSharedPtr<IPropertyHandle> StructPropertyHandle;
-	TSharedPtr<IPropertyHandle> ParticipantNamePropertyHandle;
+	TSharedPtr<IPropertyHandle> ParticipantTagPropertyHandle;
 
 	// Cache the properties
 	TSharedPtr<IPropertyHandle> ArgumentTypePropertyHandle;
@@ -115,7 +116,8 @@ private:
 	TSharedPtr<IPropertyUtilities> PropertyUtils;
 
 	// Cache the rows of the properties, created in CustomizeChildren
-	TSharedPtr<FDlgTextPropertyPickList_CustomRowHelper> ParticipantNamePropertyRow;
+	IDetailPropertyRow* ParticipantTagPropertyRow;
+	IDetailPropertyRow* ParticipantNamePropertyRow;
 	TSharedPtr<FDlgTextPropertyPickList_CustomRowHelper> VariableNamePropertyRow;
 
 	IDetailPropertyRow* CustomTextArgumentPropertyRow = nullptr;

@@ -71,7 +71,7 @@ struct FDlgSpeechSequenceEntry_FormatHumanReadable
 public:
 	// ParticipantName
 	UPROPERTY()
-	FName Speaker;
+	FName SpeakerTag;
 
 	UPROPERTY()
 	FText Text;
@@ -96,7 +96,7 @@ public:
 	int32 NodeIndex = INDEX_NONE - 1;
 
 	UPROPERTY()
-	FName Speaker;
+	FName SpeakerTag;
 
 	UPROPERTY()
 	TArray<FDlgSpeechSequenceEntry_FormatHumanReadable> Sequence;
@@ -122,7 +122,7 @@ public:
 	int32 NodeIndex = INDEX_NONE - 1;
 
 	UPROPERTY()
-	FName Speaker;
+	FName SpeakerTag;
 
 	UPROPERTY()
 	FText Text;

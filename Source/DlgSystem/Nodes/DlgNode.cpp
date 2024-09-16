@@ -8,6 +8,7 @@
 #include "DlgSystem/DlgContext.h"
 #include "DlgSystem/Logging/DlgLogger.h"
 #include "DlgSystem/DlgLocalizationHelper.h"
+#include "DlgSystem/DlgHelper.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Begin UObject interface
@@ -137,7 +138,7 @@ bool UDlgNode::HandleNodeEnter(UDlgContext& Context, TSet<const UDlgNode*> Nodes
 
 	for (FDlgEdge& Edge : Children)
 	{
-		Edge.RebuildConstructedText(Context, OwnerName);
+		Edge.RebuildConstructedText(Context, OwnerTag);
 	}
 
 	return ReevaluateChildren(Context, {});
@@ -148,10 +149,10 @@ void UDlgNode::FireNodeEnterEvents(UDlgContext& Context)
 	for (const FDlgEvent& Event : EnterEvents)
 	{
 		// Get Participant from either event or parent
-		UObject* Participant = Context.GetMutableParticipant(Event.ParticipantName);
+		UObject* Participant = Context.GetMutableParticipant(Event.ParticipantTag);
 		if (!IsValid(Participant))
 		{
-			Participant = Context.GetMutableParticipant(OwnerName);
+			Participant = Context.GetMutableParticipant(OwnerTag);
 		}
 
 		Event.Call(Context, TEXT("FireNodeEnterEvents"), Participant);
@@ -211,7 +212,7 @@ bool UDlgNode::CheckNodeEnterConditions(const UDlgContext& Context, TSet<const U
 	}
 
 	AlreadyVisitedNodes.Add(this);
-	if (!FDlgCondition::EvaluateArray(Context, EnterConditions, OwnerName))
+	if (!FDlgCondition::EvaluateArray(Context, EnterConditions, OwnerTag))
 	{
 		return false;
 	}
@@ -400,11 +401,11 @@ void UDlgNode::UpdateGraphNode()
 #endif // WITH_EDITOR
 }
 
-void UDlgNode::GetAssociatedParticipants(TArray<FName>& OutArray) const
+void UDlgNode::GetAssociatedParticipants(TArray<FGameplayTag>& OutArray) const
 {
-	if (OwnerName != NAME_None)
+	if (UBSDlgFunctions::IsValidParticipantTag(OwnerTag))
 	{
-		OutArray.AddUnique(OwnerName);
+		OutArray.AddUnique(OwnerTag);
 	}
 }
 

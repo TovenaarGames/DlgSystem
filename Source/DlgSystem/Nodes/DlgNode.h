@@ -130,9 +130,13 @@ public:
 	//
 
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Node")
-	virtual FName GetNodeParticipantName() const { return OwnerName; }
+	virtual FName GetNodeParticipantName_Old() const { checkNoEntry();  return NAME_None; }
 
-	virtual void SetNodeParticipantName(FName InName) { OwnerName = InName; }
+	UFUNCTION(BlueprintPure, Category = "Dialogue|Node")
+	virtual FGameplayTag GetNodeParticipantTag() const { return OwnerTag; }
+
+	virtual void SetNodeParticipantName_Old(FName InName) { checkNoEntry(); }
+	virtual void SetNodeParticipantTag(const FGameplayTag& InTag) { OwnerTag = InTag; }
 
 	//
 	// For the EnterConditions
@@ -214,7 +218,7 @@ public:
 	const TArray<int32> GetNodeOpenChildren_DEPRECATED() const;
 
 	// Gathers associated participants, they are only added to the array if they are not yet there
-	virtual void GetAssociatedParticipants(TArray<FName>& OutArray) const;
+	virtual void GetAssociatedParticipants(TArray<FGameplayTag>& OutArray) const;
 
 	// Updates the value of the texts from the default values or the remappings (if any)
 	virtual void UpdateTextsValuesFromDefaultsAndRemappings(
@@ -281,6 +285,7 @@ public:
 	UDlgDialogue* GetDialogue() const;
 
 	// Helper functions to get the names of some properties. Used by the DlgSystemEditor module.
+	static FName GetMemberNameOwnerTag() { return GET_MEMBER_NAME_CHECKED(UDlgNode, OwnerTag); }
 	static FName GetMemberNameOwnerName() { return GET_MEMBER_NAME_CHECKED(UDlgNode, OwnerName); }
 	static FName GetMemberNameCheckChildrenOnEvaluation() { return GET_MEMBER_NAME_CHECKED(UDlgNode, bCheckChildrenOnEvaluation); }
 	static FName GetMemberNameEnterConditions() { return GET_MEMBER_NAME_CHECKED(UDlgNode, EnterConditions); }
@@ -306,8 +311,12 @@ protected:
 #endif // WITH_EDITORONLY_DATA
 
 	// Name of a participant (speaker) associated with this node.
-	UPROPERTY(EditAnywhere, Category = "Dialogue|Node", Meta = (DisplayName = "Participant Name"))
+	UPROPERTY(VisibleAnywhere, Category = "Dialogue|Node", Meta = (DisplayName = "Participant Name", DeprecatedProperty, DeprecationMessage="Use OwnerTag"))
 	FName OwnerName;
+
+	// Tag of a participant (speaker) associated with this node.
+	UPROPERTY(EditAnywhere, Category = "Dialogue|Node", Meta = (DisplayName = "Participant Tag", Categories="Dlg"))
+	FGameplayTag OwnerTag;
 
 	/**
 	 *  If it is set the node is only satisfied if at least one of its children is

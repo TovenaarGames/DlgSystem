@@ -10,6 +10,7 @@
 #include "Misc/Paths.h"
 #include "UObject/UObjectIterator.h"
 #include "Framework/Docking/TabManager.h"
+#include "DlgConstants.h"
 
 bool FDlgHelper::DeleteFile(const FString& PathName, bool bVerbose)
 {
@@ -249,9 +250,9 @@ bool FDlgHelper::GetAllClassesImplementingInterface(const UClass* InterfaceClass
 	return OutNativeClasses.Num() > 0 || OutBlueprintClasses.Num() > 0;
 }
 
-TMap<FName, TArray<FDlgClassAndObject>> FDlgHelper::ConvertDialogueParticipantsClassesIntoMap(const TArray<UClass*>& Classes)
+TMap<FGameplayTag, TArray<FDlgClassAndObject>> FDlgHelper::ConvertDialogueParticipantsClassesIntoMap(const TArray<UClass*>& Classes)
 {
-	TMap<FName, TArray<FDlgClassAndObject>> ObjectsMap;
+	TMap<FGameplayTag, TArray<FDlgClassAndObject>> ObjectsMap;
 
 	for (UClass* Class : Classes)
 	{
@@ -274,20 +275,55 @@ TMap<FName, TArray<FDlgClassAndObject>> FDlgHelper::ConvertDialogueParticipantsC
 		Struct.Class = Class;
 		Struct.Object = Object;
 
-		const FName ParticipantName = IDlgDialogueParticipant::Execute_GetParticipantName(Object);
-		if (ObjectsMap.Contains(ParticipantName))
+		const FGameplayTag ParticipantTag = IDlgDialogueParticipant::Execute_GetParticipantTag(Object);
+		if (ObjectsMap.Contains(ParticipantTag))
 		{
 			// Update
-			ObjectsMap[ParticipantName].Add(Struct);
+			ObjectsMap[ParticipantTag].Add(Struct);
 		}
 		else
 		{
 			// Create
 			TArray<FDlgClassAndObject> Array;
 			Array.Add(Struct);
-			ObjectsMap.Add(ParticipantName, Array);
+			ObjectsMap.Add(ParticipantTag, Array);
 		}
 	}
 
 	return ObjectsMap;
+}
+
+
+bool UBSDlgFunctions::IsValidParticipantTag(const FGameplayTag& ParticipantTag)
+{
+	return ParticipantTag.IsValid() &&
+		ParticipantTag.MatchesTag(TAG_Dlg);
+}
+
+
+FString UBSDlgFunctions::GetParticipantLeafTag(const FGameplayTag& ParticipantTag)
+{
+	if (IsValidParticipantTag(ParticipantTag))
+	{
+		// Convert the gameplay tag to a string
+		FString TagString = ParticipantTag.ToString();
+
+		// Split the tag string by the '.' delimiter
+		TArray<FString> TagParts;
+		TagString.ParseIntoArray(TagParts, TEXT("."), true);
+
+		// Return the last part if there are any elements
+		if (TagParts.Num() > 0)
+		{
+			FString leaf_string;
+			if (ParticipantTag.MatchesTag(TAG_Dlg_Hero))
+			{
+				leaf_string += FString::Printf(TEXT("Hero "));
+			}
+
+			return leaf_string + TagParts.Last();  // Last part of the tag
+		}
+	}
+
+	return FString();
 }

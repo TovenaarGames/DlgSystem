@@ -4,6 +4,7 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 #include "UObject/Interface.h"
+#include "GameplayTagContainer.h"
 
 #include "DlgDialogueParticipant.generated.h"
 
@@ -29,10 +30,10 @@ class DLGSYSTEM_API IDlgDialogueParticipant
 	//
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Dialogue|Participant")
-	FName GetParticipantName() const;
+	FGameplayTag GetParticipantTag() const;
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Dialogue|Participant")
-	FText GetParticipantDisplayName(FName ActiveSpeaker) const;
+	FText GetParticipantDisplayName(const FGameplayTag& ActiveSpeaker) const;
 
 	/** May be used for formatted node texts, check https://docs.unrealengine.com/en-us/Gameplay/Localization/Formatting for more information */
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Dialogue|Participant")
@@ -45,7 +46,7 @@ class DLGSYSTEM_API IDlgDialogueParticipant
 	* @return	Participant icon to display
 	*/
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Dialogue|Participant")
-	UTexture2D* GetParticipantIcon(FName ActiveSpeaker, FName ActiveSpeakerState) const;
+	UTexture2D* GetParticipantIcon(const FGameplayTag& ActiveSpeaker, FName ActiveSpeakerState) const;
 
 	//
 	// Conditions

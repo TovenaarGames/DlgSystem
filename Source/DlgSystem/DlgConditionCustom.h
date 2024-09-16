@@ -1,6 +1,7 @@
 // Copyright Csaba Molnar, Daniel Butum. All Rights Reserved.
 #pragma once
 #include "DlgObject.h"
+#include "GameplayTagContainer.h"
 
 #include "DlgConditionCustom.generated.h"
 
@@ -26,16 +27,8 @@ public:
 
 	// Display text for editor graph node
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Dialogue")
-	FString GetEditorDisplayString(UDlgDialogue* OwnerDialogue, FName ParticipantName);
-	virtual FString GetEditorDisplayString_Implementation(UDlgDialogue* OwnerDialogue, FName ParticipantName)
-	{
-		const FString TargetPreFix = ParticipantName != NAME_None ? FString::Printf(TEXT("[%s] "), *ParticipantName.ToString()) : TEXT("");
-#if WITH_EDITOR
-		return TargetPreFix + GetClass()->GetDisplayNameText().ToString();
-#else
-		return TargetPreFix + GetName();
-#endif
-	}
+	FString GetEditorDisplayString(UDlgDialogue* OwnerDialogue, const FGameplayTag& ParticipantTag);
+	virtual FString GetEditorDisplayString_Implementation(UDlgDialogue* OwnerDialogue, const FGameplayTag& ParticipantTag);
 };
 
 // This is the same as UDlgConditionCustom but it does NOT show the categories

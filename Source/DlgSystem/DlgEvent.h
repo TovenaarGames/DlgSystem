@@ -3,6 +3,7 @@
 
 #include "CoreMinimal.h"
 #include "DlgEventCustom.h"
+#include "GameplayTagContainer.h"
 
 #include "DlgEvent.generated.h"
 
@@ -64,7 +65,7 @@ public:
 
 	bool operator==(const FDlgEvent& Other) const
 	{
-		return ParticipantName == Other.ParticipantName &&
+		return ParticipantTag.MatchesTagExact(Other.ParticipantTag) &&
 			EventName == Other.EventName &&
 			IntValue == Other.IntValue &&
 			FMath::IsNearlyEqual(FloatValue, Other.FloatValue, KINDA_SMALL_NUMBER) &&
@@ -126,8 +127,12 @@ protected:
 
 public:
 	// Name of the participant (speaker) the event is called on.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Event")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Dialogue|Event", meta=(DeprecatedProperty, DeprecationMessage="Use ParticipantTag in stead!"))
 	FName ParticipantName;
+
+	// Tag of the participant (speaker) the event is called on.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Event")
+	FGameplayTag ParticipantTag;
 
 	// Type of the event, can be a simple event or a call to modify a bool/int/float variable
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Event")

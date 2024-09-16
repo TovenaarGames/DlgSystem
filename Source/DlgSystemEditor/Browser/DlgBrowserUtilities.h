@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 
 #include "DlgBrowserTreeNode.h"
 #include "DialogueTreeProperties/DlgBrowserTreeParticipantProperties.h"
@@ -49,9 +50,9 @@ public:
 
 	// Predicate that sorts participants by dialogue number references, in descending order.
 	static bool PredicateSortByDialoguesNumDescending(
-		FName FirstParticipant,
-		FName SecondParticipant,
-		const TMap<FName, TSharedPtr<FDlgBrowserTreeParticipantProperties>>& ParticipantsProperties
+		FGameplayTag FirstParticipant,
+		FGameplayTag SecondParticipant,
+		const TMap<FGameplayTag, TSharedPtr<FDlgBrowserTreeParticipantProperties>>& ParticipantsProperties
 	)
 	{
 		int32 FirstNum = 0;

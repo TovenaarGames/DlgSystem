@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 
 #include "DlgSystemEditor/Editor/Nodes/DialogueGraphNode_Edge.h"
 #include "DlgSystemEditor/Editor/Nodes/DialogueGraphNode.h"
@@ -159,12 +160,12 @@ public:
 	static UDlgDialogue* GetDialogueFromPropertyHandle(const TSharedRef<IPropertyHandle>& PropertyHandle);
 
 	/**
-	 * Tries to get the participant name of the struct by using that structs PropertyName
-	 * 1. Tries to get the value from the ParticipantNamePropertyHandle of that struct.
-	 * 2. Gets the ParticipantName from the Node that has this property.
+	 * Tries to get the participant tag of the struct by using that structs PropertyName
+	 * 1. Tries to get the value from the ParticipantTagPropertyHandle of that struct.
+	 * 2. Gets the ParticipantTag from the Node that has this property.
 	 */
-	static FName GetParticipantNameFromPropertyHandle(const TSharedRef<IPropertyHandle>& ParticipantNamePropertyHandle);
+	static FGameplayTag GetParticipantTagFromPropertyHandle(const TSharedRef<IPropertyHandle>& ParticipantTagPropertyHandle);
 
-	/** Gets all the participant names of the Dialogue sorted alphabetically */
-	static TArray<FName> GetDialogueSortedParticipantNames(UDlgDialogue* Dialogue);
+	/** Gets all the participant tags of the Dialogue sorted alphabetically */
+	static TArray<FGameplayTag> GetDialogueSortedParticipantTags(UDlgDialogue* Dialogue);
 };

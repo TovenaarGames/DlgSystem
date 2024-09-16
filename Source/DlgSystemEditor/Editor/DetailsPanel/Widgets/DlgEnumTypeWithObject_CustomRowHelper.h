@@ -5,6 +5,7 @@
 #include "DlgSystem/DlgCondition.h"
 #include "DlgSystem/DlgEvent.h"
 #include "IDetailPropertyRow.h"
+#include "GameplayTagContainer.h"
 
 class FDetailWidgetRow;
 class UDlgDialogue;
@@ -28,8 +29,8 @@ public:
 	FDlgEnumTypeWithObject_CustomRowHelper(
 		IDetailPropertyRow* InPropertyRow,
 		const UDlgDialogue* InDialogue,
-		const TSharedPtr<IPropertyHandle>& InParticipantNamePropertyHandle
-	) : Super(InPropertyRow), Dialogue(InDialogue), ParticipantNamePropertyHandle(InParticipantNamePropertyHandle)
+		const TSharedPtr<IPropertyHandle>& InParticipantTagPropertyHandle
+	) : Super(InPropertyRow), Dialogue(InDialogue), ParticipantTagPropertyHandle(InParticipantTagPropertyHandle)
 	{
 		bAddBlueprintFunctionIfItDoesNotExist = false;
 	}
@@ -91,8 +92,8 @@ protected:
 	}
 
 	uint8 GetEnumValue() const;
-	FName GetParticipantName() const;
-	bool HasParticipantName() const { return GetParticipantName() != NAME_None; }
+	FGameplayTag GetParticipantTag() const;
+	bool HasParticipantTag() const;
 	EDlgEventType GetEventType() const { return static_cast<EDlgEventType>(GetEnumValue()); }
 	EDlgConditionType GetConditionType() const {  return static_cast<EDlgConditionType>(GetEnumValue()); }
 
@@ -100,5 +101,5 @@ protected:
 protected:
 	EDialogueEnumWithObjectType EnumType = EDialogueEnumWithObjectType::None;
 	TWeakObjectPtr<const UDlgDialogue> Dialogue = nullptr;
-	TSharedPtr<IPropertyHandle> ParticipantNamePropertyHandle = nullptr;
+	TSharedPtr<IPropertyHandle> ParticipantTagPropertyHandle = nullptr;
 };

@@ -26,9 +26,9 @@ void FDlgTextArgument_Details::CustomizeHeader(TSharedRef<IPropertyHandle> InStr
 	PropertyUtils = StructCustomizationUtils.GetPropertyUtilities();
 
 	// Cache the Property Handle for the ArgumentType
-	ParticipantNamePropertyHandle = StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgTextArgument, ParticipantName));
+	ParticipantTagPropertyHandle = StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgTextArgument, ParticipantTag));
 	ArgumentTypePropertyHandle = StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgTextArgument, Type));
-	check(ParticipantNamePropertyHandle.IsValid());
+	check(ParticipantTagPropertyHandle.IsValid());
 	check(ArgumentTypePropertyHandle.IsValid());
 
 	// Register handler for event type change
@@ -53,20 +53,20 @@ void FDlgTextArgument_Details::CustomizeChildren(TSharedRef<IPropertyHandle> InS
 	// DisplayString
 	StructBuilder.AddProperty(StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgTextArgument, DisplayString)).ToSharedRef());
 
+	// ParticipantTag
+	{
+		FDetailWidgetRow* DetailWidgetRow = &StructBuilder.AddCustomRow(LOCTEXT("ParticipantTagSearchKey", "Participant Tag"));
+
+		ParticipantTagPropertyRow = &StructBuilder.AddProperty(
+			StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgTextArgument, ParticipantTag)).ToSharedRef());
+	}
+
 	// ParticipantName
 	{
 		FDetailWidgetRow* DetailWidgetRow = &StructBuilder.AddCustomRow(LOCTEXT("ParticipantNameSearchKey", "Participant Name"));
 
-		ParticipantNamePropertyRow = MakeShared<FDlgTextPropertyPickList_CustomRowHelper>(DetailWidgetRow, ParticipantNamePropertyHandle);
-		ParticipantNamePropertyRow->SetTextPropertyPickListWidget(
-			SNew(SDlgTextPropertyPickList)
-			.AvailableSuggestions(this, &Self::GetDialoguesParticipantNames)
-			.OnTextCommitted(this, &Self::HandleTextCommitted)
-			.HasContextCheckbox(bHasDialogue)
-			.IsContextCheckBoxChecked(true)
-			.CurrentContextAvailableSuggestions(this, &Self::GetCurrentDialogueParticipantNames)
-		)
-		.Update();
+		ParticipantNamePropertyRow = &StructBuilder.AddProperty(
+			StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgTextArgument, ParticipantName)).ToSharedRef());
 	}
 
 	// ArgumentType
@@ -132,25 +132,25 @@ void FDlgTextArgument_Details::OnArgumentTypeChanged(bool bForceRefresh)
 TArray<FName> FDlgTextArgument_Details::GetDialogueVariableNames(bool bCurrentOnly) const
 {
 	TArray<FName> Suggestions;
-	const FName ParticipantName = FDlgDetailsPanelUtils::GetParticipantNameFromPropertyHandle(ParticipantNamePropertyHandle.ToSharedRef());
+	const FGameplayTag ParticipantTag = FDlgDetailsPanelUtils::GetParticipantTagFromPropertyHandle(ParticipantTagPropertyHandle.ToSharedRef());
 
 	switch (ArgumentType)
 	{
 		case EDlgTextArgumentType::DialogueInt:
 			if (bCurrentOnly && Dialogue)
 			{
-				const TSet<FName> SuggestionsSet = Dialogue->GetParticipantIntNames(ParticipantName);
+				const TSet<FName> SuggestionsSet = Dialogue->GetParticipantIntNames(ParticipantTag);
 				Suggestions = SuggestionsSet.Array();
 			}
 			else
 			{
-				Suggestions.Append(UDlgManager::GetDialoguesParticipantIntNames(ParticipantName));
+				Suggestions.Append(UDlgManager::GetDialoguesParticipantIntNames(ParticipantTag));
 			}
 			break;
 
 		case EDlgTextArgumentType::ClassInt:
 			FNYReflectionHelper::GetVariableNames(
-				Dialogue->GetParticipantClass(ParticipantName),
+				Dialogue->GetParticipantClass(ParticipantTag),
 				FIntProperty::StaticClass(),
 				Suggestions,
 				GetDefault<UDlgSystemSettings>()->BlacklistedReflectionClasses
@@ -160,12 +160,12 @@ TArray<FName> FDlgTextArgument_Details::GetDialogueVariableNames(bool bCurrentOn
 		case EDlgTextArgumentType::DialogueFloat:
 			if (bCurrentOnly && Dialogue)
 			{
-				const TSet<FName> SuggestionsSet = Dialogue->GetParticipantFloatNames(ParticipantName);
+				const TSet<FName> SuggestionsSet = Dialogue->GetParticipantFloatNames(ParticipantTag);
 				Suggestions = SuggestionsSet.Array();
 			}
 			else
 			{
-				Suggestions.Append(UDlgManager::GetDialoguesParticipantFloatNames(ParticipantName));
+				Suggestions.Append(UDlgManager::GetDialoguesParticipantFloatNames(ParticipantTag));
 			}
 			break;
 
@@ -173,7 +173,7 @@ TArray<FName> FDlgTextArgument_Details::GetDialogueVariableNames(bool bCurrentOn
 			if (Dialogue)
 			{
 				FNYReflectionHelper::GetVariableNames(
-					Dialogue->GetParticipantClass(ParticipantName),
+					Dialogue->GetParticipantClass(ParticipantTag),
 					FDoubleProperty::StaticClass(),
 					Suggestions,
 					GetDefault<UDlgSystemSettings>()->BlacklistedReflectionClasses
@@ -185,7 +185,7 @@ TArray<FName> FDlgTextArgument_Details::GetDialogueVariableNames(bool bCurrentOn
 			if (Dialogue)
 			{
 				FNYReflectionHelper::GetVariableNames(
-					Dialogue->GetParticipantClass(ParticipantName),
+					Dialogue->GetParticipantClass(ParticipantTag),
 					FTextProperty::StaticClass(),
 					Suggestions,
 					GetDefault<UDlgSystemSettings>()->BlacklistedReflectionClasses
@@ -197,7 +197,7 @@ TArray<FName> FDlgTextArgument_Details::GetDialogueVariableNames(bool bCurrentOn
 		default:
 			break;
 	}
-	FDlgHelper::SortDefault(Suggestions);
+	FDlgHelper::SortFNameDefault(Suggestions);
 	return Suggestions;
 }
 

@@ -284,7 +284,7 @@ void UDlgDialogue::PostEditChangeChainProperty(struct FPropertyChangedChainEvent
 	const FName PropertyName = ActivePropertyNode && ActivePropertyNode->GetValue() ? ActivePropertyNode->GetValue()->GetFName() : NAME_None;
 
 	// Check if the participant UClass implements our interface
-	if (MemberPropertyName == GET_MEMBER_NAME_CHECKED(ThisClass, ParticipantsClasses))
+	if (MemberPropertyName == GET_MEMBER_NAME_CHECKED(UDlgDialogue, ParticipantsClasses))
 	{
 		if (PropertyName == GET_MEMBER_NAME_CHECKED(FDlgParticipantClass, ParticipantClass))
 		{
@@ -612,31 +612,31 @@ void UDlgDialogue::ExportToFileFormat(EDlgDialogueTextFormat TextFormat) const
 	}
 }
 
-FDlgParticipantData& UDlgDialogue::GetParticipantDataEntry(FName ParticipantName, FName FallbackParticipantName, bool bCheckNone, const FString& ContextMessage)
+FDlgParticipantData& UDlgDialogue::GetParticipantDataEntry(const FGameplayTag& ParticipantTag, const FGameplayTag& FallbackParticipantTag, bool bCheckNone, const FString& ContextMessage)
 {
 	// Used to ignore some participants
 	static FDlgParticipantData BlackHoleParticipant;
 
-	// If the Participant Name is not set, it adopts the Node Owner Name
-	const FName& ValidParticipantName = ParticipantName == NAME_None ? FallbackParticipantName : ParticipantName;
+	// If the Participant Tag is not set, it adopts the Node Owner Tag
+	const FGameplayTag& ValidParticipantTag = UBSDlgFunctions::IsValidParticipantTag(ParticipantTag) ? ParticipantTag : FallbackParticipantTag;
 
 	// Parent/child is not valid, simply do nothing
-	if (bCheckNone && ValidParticipantName == NAME_None)
+	if (bCheckNone && !UBSDlgFunctions::IsValidParticipantTag(ValidParticipantTag))
 	{
 		FDlgLogger::Get().Warningf(
-			TEXT("Ignoring ParticipantName = None, Context = `%s`. Either your node participant name is None or your participant name is None."),
+			TEXT("Ignoring ParticipantTag = Empty, Context = `%s`. Either your node participant tag is empty or your participant tag is empty."),
 			*ContextMessage
 		);
 		return BlackHoleParticipant;
 	}
 
-	return ParticipantsData.FindOrAdd(ValidParticipantName);
+	return ParticipantsData.FindOrAdd(ValidParticipantTag);
 }
 
 void UDlgDialogue::AddConditionsDataFromNodeEdges(const UDlgNode* Node, int32 NodeIndex)
 {
 	const FString NodeContext = FString::Printf(TEXT("Node %s"), NodeIndex > INDEX_NONE ? *FString::FromInt(NodeIndex) : TEXT("Start") );
-	const FName FallbackParticipantName = Node->GetNodeParticipantName();
+	const FGameplayTag& FallbackParticipantTag = Node->GetNodeParticipantTag();
 
 	for (const FDlgEdge& Edge : Node->GetNodeChildren())
 	{
@@ -647,13 +647,13 @@ void UDlgDialogue::AddConditionsDataFromNodeEdges(const UDlgNode* Node, int32 No
 			if (Condition.IsParticipantInvolved())
 			{
 				const FString ContextMessage = FString::Printf(TEXT("Adding Edge primary condition data from %s to Node %d"), *NodeContext, TargetIndex);
-				GetParticipantDataEntry(Condition.ParticipantName, FallbackParticipantName, true, ContextMessage)
+				GetParticipantDataEntry(Condition.ParticipantTag, FallbackParticipantTag, true, ContextMessage)
 					.AddConditionPrimaryData(Condition);
 			}
 			if (Condition.IsSecondParticipantInvolved())
 			{
 				const FString ContextMessage = FString::Printf(TEXT("Adding Edge secondary condition data from %s to Node %d"), *NodeContext, TargetIndex);
-				GetParticipantDataEntry(Condition.OtherParticipantName, FallbackParticipantName, true, ContextMessage)
+				GetParticipantDataEntry(Condition.OtherParticipantTag, FallbackParticipantTag, true, ContextMessage)
 					.AddConditionSecondaryData(Condition);
 			}
 		}
@@ -699,15 +699,15 @@ void UDlgDialogue::UpdateAndRefreshData(bool bUpdateTextsNamespacesAndKeys)
 	{
 		const FString NodeContext = FString::Printf(TEXT("Node %d"), NodeIndex);
 		UDlgNode* Node = Nodes[NodeIndex];
-		const FName NodeParticipantName = Node->GetNodeParticipantName();
+		const FGameplayTag& NodeParticipantName = Node->GetNodeParticipantTag();
 
 		// Rebuild & Update
 		RebuildAndUpdateNode(Node, *Settings, bUpdateTextsNamespacesAndKeys);
 
 		// participant names
-		TArray<FName> Participants;
+		TArray<FGameplayTag> Participants;
 		Node->GetAssociatedParticipants(Participants);
-		for (const FName& Participant : Participants)
+		for (const FGameplayTag& Participant : Participants)
 		{
 			if (!ParticipantsData.Contains(Participant))
 			{
@@ -724,13 +724,13 @@ void UDlgDialogue::UpdateAndRefreshData(bool bUpdateTextsNamespacesAndKeys)
 			if (Condition.IsParticipantInvolved())
 			{
 				const FString ContextMessage = FString::Printf(TEXT("Adding primary condition data for %s"), *NodeContext);
-				GetParticipantDataEntry(Condition.ParticipantName, NodeParticipantName, true, ContextMessage)
+				GetParticipantDataEntry(Condition.ParticipantTag, NodeParticipantName, true, ContextMessage)
 					.AddConditionPrimaryData(Condition);
 			}
 			if (Condition.IsSecondParticipantInvolved())
 			{
 				const FString ContextMessage = FString::Printf(TEXT("Adding secondary condition data for %s"), *NodeContext);
-				GetParticipantDataEntry(Condition.OtherParticipantName, NodeParticipantName, true, ContextMessage)
+				GetParticipantDataEntry(Condition.OtherParticipantTag, NodeParticipantName, true, ContextMessage)
 					.AddConditionSecondaryData(Condition);
 			}
 		}
@@ -754,7 +754,7 @@ void UDlgDialogue::UpdateAndRefreshData(bool bUpdateTextsNamespacesAndKeys)
 			for (const FDlgTextArgument& TextArgument : Edge.GetTextArguments())
 			{
 				const FString ContextMessage = FString::Printf(TEXT("Adding Edge text arguments data from %s, to Node %d"), *NodeContext, TargetIndex);
-				GetParticipantDataEntry(TextArgument.ParticipantName, NodeParticipantName, true, ContextMessage)
+				GetParticipantDataEntry(TextArgument.ParticipantTag, NodeParticipantName, true, ContextMessage)
 					.AddTextArgumentData(TextArgument);
 			}
 		}
@@ -763,7 +763,7 @@ void UDlgDialogue::UpdateAndRefreshData(bool bUpdateTextsNamespacesAndKeys)
 		for (const FDlgEvent& Event : Node->GetNodeEnterEvents())
 		{
 			const FString ContextMessage = FString::Printf(TEXT("Adding events data for %s"), *NodeContext);
-			GetParticipantDataEntry(Event.ParticipantName, NodeParticipantName, true, ContextMessage)
+			GetParticipantDataEntry(Event.ParticipantTag, NodeParticipantName, true, ContextMessage)
 				.AddEventData(Event);
 		}
 
@@ -771,7 +771,7 @@ void UDlgDialogue::UpdateAndRefreshData(bool bUpdateTextsNamespacesAndKeys)
 		for (const FDlgTextArgument& TextArgument : Node->GetTextArguments())
 		{
 			const FString ContextMessage = FString::Printf(TEXT("Adding text arguments data for %s"), *NodeContext);
-			GetParticipantDataEntry(TextArgument.ParticipantName, NodeParticipantName, true, ContextMessage)
+			GetParticipantDataEntry(TextArgument.ParticipantTag, NodeParticipantName, true, ContextMessage)
 				.AddTextArgumentData(TextArgument);
 		}
 	}
@@ -782,30 +782,30 @@ void UDlgDialogue::UpdateAndRefreshData(bool bUpdateTextsNamespacesAndKeys)
 	//
 	// Fill ParticipantClasses
 	//
-	TSet<FName> Participants = GetParticipantNames();
+	FGameplayTagContainer Participants = GetParticipantTags();
 
 	// 1. remove outdated entries
 	for (int32 Index = ParticipantsClasses.Num() - 1; Index >= 0; --Index)
 	{
-		const FName ExaminedName = ParticipantsClasses[Index].ParticipantName;
-		if (!Participants.Contains(ExaminedName) || ExaminedName.IsNone())
+		const FGameplayTag ExaminedTag = ParticipantsClasses[Index].ParticipantTag;
+		if (!Participants.HasTagExact(ExaminedTag) || !UBSDlgFunctions::IsValidParticipantTag(ExaminedTag))
 		{
 			ParticipantsClasses.RemoveAtSwap(Index);
 		}
 
-		Participants.Remove(ExaminedName);
+		Participants.RemoveTag(ExaminedTag);
 	}
 
 	// 2. add new entries
-	for (const FName Participant : Participants)
+	for (const FGameplayTag& Participant : Participants)
 	{
-		if (Participant != NAME_None)
+		if (UBSDlgFunctions::IsValidParticipantTag(Participant))
 		{
 			ParticipantsClasses.Add({ Participant, nullptr });
 		}
 		else
 		{
-			FDlgLogger::Get().Warning(TEXT("Trying to fill ParticipantsClasses, got a Participant name = None. Ignoring!"));
+			FDlgLogger::Get().Warning(TEXT("Trying to fill ParticipantsClasses, got an invalid Participant tag. Ignoring!"));
 		}
 	}
 
@@ -816,21 +816,21 @@ void UDlgDialogue::UpdateAndRefreshData(bool bUpdateTextsNamespacesAndKeys)
 		TArray<UClass*> BlueprintClasses;
 		FDlgHelper::GetAllClassesImplementingInterface(UDlgDialogueParticipant::StaticClass(), NativeClasses, BlueprintClasses);
 
-		const TMap<FName, TArray<FDlgClassAndObject>> NativeClassesMap = FDlgHelper::ConvertDialogueParticipantsClassesIntoMap(NativeClasses);
-		const TMap<FName, TArray<FDlgClassAndObject>> BlueprintClassesMap = FDlgHelper::ConvertDialogueParticipantsClassesIntoMap(BlueprintClasses);
+		const TMap<FGameplayTag, TArray<FDlgClassAndObject>> NativeClassesMap = FDlgHelper::ConvertDialogueParticipantsClassesIntoMap(NativeClasses);
+		const TMap<FGameplayTag, TArray<FDlgClassAndObject>> BlueprintClassesMap = FDlgHelper::ConvertDialogueParticipantsClassesIntoMap(BlueprintClasses);
 
 		for (FDlgParticipantClass& Struct : ParticipantsClasses)
 		{
 			// Participant Name is not set or Class is set, ignore
-			if (Struct.ParticipantName == NAME_None || Struct.ParticipantClass != nullptr)
+			if (!UBSDlgFunctions::IsValidParticipantTag(Struct.ParticipantTag) || Struct.ParticipantClass != nullptr)
 			{
 				continue;
 			}
 
 			// Blueprint
-			if (BlueprintClassesMap.Contains(Struct.ParticipantName))
+			if (BlueprintClassesMap.Contains(Struct.ParticipantTag))
 			{
-				const TArray<FDlgClassAndObject>& Array = BlueprintClassesMap.FindChecked(Struct.ParticipantName);
+				const TArray<FDlgClassAndObject>& Array = BlueprintClassesMap.FindChecked(Struct.ParticipantTag);
 				if (Array.Num() == 1)
 				{
 					Struct.ParticipantClass = Array[0].Class;
@@ -838,9 +838,9 @@ void UDlgDialogue::UpdateAndRefreshData(bool bUpdateTextsNamespacesAndKeys)
 			}
 
 			// Native last resort
-			if (Struct.ParticipantClass == nullptr && NativeClassesMap.Contains(Struct.ParticipantName))
+			if (Struct.ParticipantClass == nullptr && NativeClassesMap.Contains(Struct.ParticipantTag))
 			{
-				const TArray<FDlgClassAndObject>& Array = NativeClassesMap.FindChecked(Struct.ParticipantName);
+				const TArray<FDlgClassAndObject>& Array = NativeClassesMap.FindChecked(Struct.ParticipantTag);
 				if (Array.Num() == 1)
 				{
 					Struct.ParticipantClass = Array[0].Class;
