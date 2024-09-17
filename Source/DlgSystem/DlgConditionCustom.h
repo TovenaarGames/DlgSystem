@@ -25,6 +25,8 @@ public:
 		return false;
 	}
 
+	virtual bool IsParticipantInvolved() const { return true; }
+
 	// Display text for editor graph node
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Dialogue")
 	FString GetEditorDisplayString(UDlgDialogue* OwnerDialogue, const FGameplayTag& ParticipantTag);

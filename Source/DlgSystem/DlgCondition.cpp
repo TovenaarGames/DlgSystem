@@ -280,7 +280,8 @@ bool FDlgCondition::ValidateIsParticipantValid(const UDlgContext& Context, const
 bool FDlgCondition::IsParticipantInvolved() const
 {
 	return ConditionType != EDlgConditionType::HasSatisfiedChild
-		&& ConditionType != EDlgConditionType::WasNodeVisited;
+		&& ConditionType != EDlgConditionType::WasNodeVisited
+		&& (ConditionType != EDlgConditionType::Custom || CustomCondition->IsParticipantInvolved());
 }
 
 bool FDlgCondition::IsSecondParticipantInvolved() const
