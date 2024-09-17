@@ -325,5 +325,5 @@ FString UBSDlgFunctions::GetParticipantLeafTag(const FGameplayTag& ParticipantTa
 		}
 	}
 
-	return FString();
+	return FString("None");
 }
