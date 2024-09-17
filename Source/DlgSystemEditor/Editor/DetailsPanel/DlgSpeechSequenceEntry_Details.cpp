@@ -19,6 +19,7 @@ void FDlgSpeechSequenceEntry_Details::CustomizeHeader(TSharedRef<IPropertyHandle
 {
 	StructPropertyHandle = InStructPropertyHandle;
 	Dialogue = FDlgDetailsPanelUtils::GetDialogueFromPropertyHandle(StructPropertyHandle.ToSharedRef());
+	GraphNode = Cast<UDialogueGraphNode>(FDlgDetailsPanelUtils::GetGraphNodeBaseFromPropertyHandle(StructPropertyHandle.ToSharedRef()));
 
 	const bool bShowOnlyInnerProperties = StructPropertyHandle->GetProperty()->HasMetaData(META_ShowOnlyInnerProperties);
 	if (!bShowOnlyInnerProperties)
@@ -49,12 +50,20 @@ void FDlgSpeechSequenceEntry_Details::CustomizeChildren(TSharedRef<IPropertyHand
 
 	// Text
 	{
-		TextPropertyHandle = StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgSpeechSequenceEntry, Text));
+		TextPropertyHandle = StructPropertyHandle->GetChildHandle(FDlgSpeechSequenceEntry::GetMemberNameText());
 		FDetailWidgetRow* DetailWidgetRow = &StructBuilder.AddCustomRow(LOCTEXT("TextSearchKey", "Text"));
 
 		TextPropertyRow = MakeShared<FDlgMultiLineEditableTextBox_CustomRowHelper>(DetailWidgetRow, TextPropertyHandle);
 		TextPropertyRow->SetPropertyUtils(StructCustomizationUtils.GetPropertyUtilities());
 		TextPropertyRow->Update();
+
+		TextPropertyRow->OnTextCommittedEvent().AddRaw(this, &Self::HandleTextCommitted);
+	}
+
+	// Text arguments
+	{
+		TextArgumentsPropertyRow = &StructBuilder.AddProperty(StructPropertyHandle->GetChildHandle(FDlgSpeechSequenceEntry::GetMemberNameTextArguments()).ToSharedRef());
+		TextArgumentsPropertyRow->ShouldAutoExpand(true);		
 	}
 
 

@@ -95,7 +95,7 @@ int32 UDlgStatsCommandlet::GetNodeWordCount(const UDlgNode& Node) const
 		// Speech Sequence
 		for (const FDlgSpeechSequenceEntry& Entry : NodeSpeechSequence->GetNodeSpeechSequence())
 		{
-			WordCount += GetTextWordCount(Entry.Text);
+			WordCount += GetTextWordCount(Entry.GetNodeUnformattedText());
 		}
 	}
 	else

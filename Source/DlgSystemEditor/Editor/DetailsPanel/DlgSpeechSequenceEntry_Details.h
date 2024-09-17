@@ -75,6 +75,9 @@ private:
 	}
 
 private:
+	/** Hold the reference to the Graph Node this represents */
+	UDialogueGraphNode* GraphNode = nullptr;
+
 	/** The property handle of the entire struct. */
 	TSharedPtr<IPropertyHandle> StructPropertyHandle;
 
@@ -90,6 +93,7 @@ private:
 	IDetailPropertyRow* GenericDataPropertyRow = nullptr;
 	IDetailPropertyRow* NodeDataPropertyRow = nullptr;
 	TSharedPtr<FDlgMultiLineEditableTextBox_CustomRowHelper> TextPropertyRow;
+	IDetailPropertyRow* TextArgumentsPropertyRow;
 	TSharedPtr<FDlgMultiLineEditableTextBox_CustomRowHelper> EdgeTextPropertyRow;
 
 	/** Hold a reference to dialogue we are displaying. */

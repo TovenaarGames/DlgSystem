@@ -273,7 +273,7 @@ bool UDlgHumanReadableTextCommandlet::ExportDialogueToHumanReadableFormat(const 
 			{
 				FDlgSpeechSequenceEntry_FormatHumanReadable ExportEntry;
 				ExportEntry.EdgeText = Entry.EdgeText;
-				ExportEntry.Text = Entry.Text;
+				ExportEntry.Text = Entry.GetNodeUnformattedText();
 				ExportEntry.SpeakerTag = FName(Entry.SpeakerTag.ToString());
 				ExportNode.Sequence.Add(ExportEntry);
 			}
@@ -387,7 +387,7 @@ bool UDlgHumanReadableTextCommandlet::ImportHumanReadableFormatIntoDialogue(cons
 			// Node Text changed
 			if (!NodeSpeech->GetNodeUnformattedText().EqualTo(HumanNode.Text))
 			{
-				NodeSpeech->SetNodeText(HumanNode.Text);
+				NodeSpeech->SetNodeText(HumanNode.Text, TArray<FDlgTextArgument>());
 				bModified = true;
 			}
 
@@ -471,9 +471,9 @@ bool UDlgHumanReadableTextCommandlet::ImportHumanReadableFormatIntoDialogue(cons
 			}
 
 			// Text changed
-			if (!SequenceArray[SequenceIndex].Text.EqualTo(HumanSequence.Text))
+			if (!SequenceArray[SequenceIndex].GetNodeUnformattedText().EqualTo(HumanSequence.Text))
 			{
-				SequenceArray[SequenceIndex].Text = HumanSequence.Text;
+				SequenceArray[SequenceIndex].SetNodeText(HumanSequence.Text, TArray<FDlgTextArgument>());
 				bModified = true;
 			}
 		}

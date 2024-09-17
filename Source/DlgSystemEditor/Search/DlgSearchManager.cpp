@@ -691,10 +691,10 @@ bool FDlgSearchManager::QueryGraphNode(
 
 			// Test Text Description
 			const FText TextCategory = FText::Format(LOCTEXT("SequenceEntryText", "SequenceEntry.Text at index = {0}"), FText::AsNumber(Index));
-			if (SequenceEntry.Text.ToString().Contains(SearchFilter.SearchString))
+			if (SequenceEntry.GetNodeUnformattedText().ToString().Contains(SearchFilter.SearchString))
 			{
 				bContainsSearchString = true;
-				MakeChildTextNode(TreeGraphNode, SequenceEntry.Text, TextCategory, TextCategory.ToString());
+				MakeChildTextNode(TreeGraphNode, SequenceEntry.GetNodeUnformattedText(), TextCategory, TextCategory.ToString());
 			}
 			if (SearchFilter.bIncludeTextLocalizationData)
 			{
@@ -702,7 +702,7 @@ bool FDlgSearchManager::QueryGraphNode(
 				const FText KeyCategory =  FText::FromString(TEXT("Key ") + TextCategory.ToString());
 				bContainsSearchString = SearchForTextLocalizationData(
 					TreeGraphNode,
-					SearchFilter.SearchString, SequenceEntry.Text,
+					SearchFilter.SearchString, SequenceEntry.GetNodeUnformattedText(),
 					NamespaceCategory, NamespaceCategory.ToString(),
 					KeyCategory, KeyCategory.ToString()
 				) || bContainsSearchString;

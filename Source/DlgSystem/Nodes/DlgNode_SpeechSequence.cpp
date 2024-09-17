@@ -15,6 +15,14 @@ void UDlgNode_SpeechSequence::PostEditChangeProperty(FPropertyChangedEvent& Prop
 
 	// fill edges automatically based on input data
 	AutoGenerateInnerEdges();
+
+	// Rebuild text arguments
+	const FName PropertyName = PropertyChangedEvent.Property != nullptr ? PropertyChangedEvent.Property->GetFName() : NAME_None;
+	const bool bSpeechSequnceChanged = PropertyName == GetMemberNameSpeechSequence();
+	if (bSpeechSequnceChanged)
+	{
+		RebuildTextArguments(true);
+	}
 }
 
 void UDlgNode_SpeechSequence::InitializeNodeDataOnArrayAdd(FPropertyChangedEvent& PropertyChangedEvent)
@@ -56,8 +64,7 @@ void UDlgNode_SpeechSequence::UpdateTextsValuesFromDefaultsAndRemappings(const U
 			}
 		}
 
-		FDlgLocalizationHelper::UpdateTextFromRemapping(Settings, Entry.Text);
-		FDlgLocalizationHelper::UpdateTextFromRemapping(Settings, Entry.EdgeText);
+		Entry.UpdateTextsValuesFromDefaultsAndRemappings(Settings);
 	}
 	Super::UpdateTextsValuesFromDefaultsAndRemappings(Settings, bEdges, bUpdateGraphNode);
 }
@@ -72,8 +79,7 @@ void UDlgNode_SpeechSequence::UpdateTextsNamespacesAndKeys(const UDlgSystemSetti
 
 	for (FDlgSpeechSequenceEntry& Entry : SpeechSequence)
 	{
-		FDlgLocalizationHelper::UpdateTextNamespaceAndKey(Outer, Settings, Entry.Text);
-		FDlgLocalizationHelper::UpdateTextNamespaceAndKey(Outer, Settings, Entry.EdgeText);
+		Entry.UpdateTextsNamespacesAndKeys(Outer, Settings);
 	}
 
 	Super::UpdateTextsNamespacesAndKeys(Settings, bEdges, bUpdateGraphNode);
@@ -82,6 +88,9 @@ void UDlgNode_SpeechSequence::UpdateTextsNamespacesAndKeys(const UDlgSystemSetti
 bool UDlgNode_SpeechSequence::HandleNodeEnter(UDlgContext& Context, TSet<const UDlgNode*> NodesEnteredWithThisStep)
 {
 	ActualIndex = 0;
+
+	RebuildConstructedText(Context);
+
 	return Super::HandleNodeEnter(Context, NodesEnteredWithThisStep);
 }
 
@@ -122,6 +131,26 @@ bool UDlgNode_SpeechSequence::OptionSelected(int32 OptionIndex, bool bFromAll, U
 	return Super::OptionSelected(OptionIndex, bFromAll, Context);
 }
 
+void UDlgNode_SpeechSequence::RebuildConstructedText(const UDlgContext& Context)
+{
+	for (FDlgSpeechSequenceEntry& entry : SpeechSequence)
+	{
+		entry.RebuildConstructedText(Context, GetNodeParticipantTag());
+	}	
+}
+
+void UDlgNode_SpeechSequence::RebuildTextArguments(bool bEdges, bool bUpdateGraphNode)
+{
+	_TextArguments.Empty(); // Also refresh array with all entries' text arguments.
+	for (FDlgSpeechSequenceEntry& entry : SpeechSequence)
+	{
+		entry.RebuildTextArguments();
+		_TextArguments.Append(entry.GetTextArguments());
+	}
+
+	Super::RebuildTextArguments(bEdges, bUpdateGraphNode);
+}
+
 bool UDlgNode_SpeechSequence::OptionSelectedFromReplicated(int32 OptionIndex, bool bFromAll, UDlgContext& Context)
 {
 	// Is the new option index valid? set that for the actual index
@@ -141,7 +170,7 @@ const FText& UDlgNode_SpeechSequence::GetNodeText() const
 {
 	if (SpeechSequence.IsValidIndex(ActualIndex))
 	{
-		return SpeechSequence[ActualIndex].Text;
+		return SpeechSequence[ActualIndex].GetNodeText();
 	}
 
 	return FText::GetEmpty();
@@ -221,10 +250,7 @@ void UDlgNode_SpeechSequence::GetAssociatedParticipants(TArray<FGameplayTag>& Ou
 
 	for (const FDlgSpeechSequenceEntry& Entry : SpeechSequence)
 	{
-		if (UBSDlgFunctions::IsValidParticipantTag(Entry.SpeakerTag))
-		{
-			OutArray.AddUnique(Entry.SpeakerTag);
-		}
+		Entry.GetAssociatedParticipants(OutArray);
 	}
 }
 
@@ -236,5 +262,73 @@ void UDlgNode_SpeechSequence::AutoGenerateInnerEdges()
 		FDlgEdge Edge;
 		Edge.SetUnformattedText(Entry.EdgeText);
 		InnerEdges.Add(Edge);
+	}
+}
+
+void FDlgSpeechSequenceEntry::SetNodeText(const FText& InText, const TArray<FDlgTextArgument>& InArguments)
+{
+	Text = InText;
+	if (TextArguments.Num() == 0 && InArguments.Num() > 0)
+	{
+		TextArguments = InArguments;
+	}
+
+	RebuildTextArguments();
+}
+
+const FText& FDlgSpeechSequenceEntry::GetNodeText() const
+{
+	if (TextArguments.Num() > 0 && !ConstructedText.IsEmpty())
+	{
+		return ConstructedText;
+	}
+	return Text;
+}
+
+void FDlgSpeechSequenceEntry::RebuildConstructedText(const UDlgContext& Context, const FGameplayTag& OwnerTag)
+{
+	if (TextArguments.Num() <= 0)
+	{
+		return;
+	}
+
+	FFormatNamedArguments OrderedArguments;
+	for (const FDlgTextArgument& DlgArgument : TextArguments)
+	{
+		OrderedArguments.Add(DlgArgument.DisplayString, DlgArgument.ConstructFormatArgumentValue(Context, OwnerTag));
+	}
+	ConstructedText = FText::AsCultureInvariant(FText::Format(Text, OrderedArguments));
+}
+
+void FDlgSpeechSequenceEntry::RebuildTextArguments()
+{
+	FDlgTextArgument::UpdateTextArgumentArray(Text, TextArguments);
+}
+
+void FDlgSpeechSequenceEntry::UpdateTextsNamespacesAndKeys(const UObject* Outer, const UDlgSystemSettings& Settings)
+{
+	FDlgLocalizationHelper::UpdateTextNamespaceAndKey(Outer, Settings, Text);
+	FDlgLocalizationHelper::UpdateTextNamespaceAndKey(Outer, Settings, EdgeText);
+}
+
+void FDlgSpeechSequenceEntry::UpdateTextsValuesFromDefaultsAndRemappings(const UDlgSystemSettings& Settings)
+{
+	FDlgLocalizationHelper::UpdateTextFromRemapping(Settings, Text);
+	FDlgLocalizationHelper::UpdateTextFromRemapping(Settings, EdgeText);
+}
+
+void FDlgSpeechSequenceEntry::GetAssociatedParticipants(TArray<FGameplayTag>& OutArray) const
+{
+	if (UBSDlgFunctions::IsValidParticipantTag(SpeakerTag))
+	{
+		OutArray.AddUnique(SpeakerTag);
+	}
+
+	for (const FDlgTextArgument& TextArgument : TextArguments)
+	{
+		if (UBSDlgFunctions::IsValidParticipantTag(TextArgument.ParticipantTag))
+		{
+			OutArray.AddUnique(TextArgument.ParticipantTag);
+		}
 	}
 }

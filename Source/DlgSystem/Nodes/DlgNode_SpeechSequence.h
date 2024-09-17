@@ -18,6 +18,24 @@ struct DLGSYSTEM_API FDlgSpeechSequenceEntry
 	// NOTE: don't create a default constructor here, because otherwise if will fail because some CDO BS after you convert nodes to speech sequence
 
 public:
+	void RebuildConstructedText(const UDlgContext& Context, const FGameplayTag& OwnerTag);
+	void RebuildTextArguments();
+	const TArray<FDlgTextArgument>& GetTextArguments() const { return TextArguments; };
+	void UpdateTextsNamespacesAndKeys(const UObject* Outer, const UDlgSystemSettings& Settings);
+	void UpdateTextsValuesFromDefaultsAndRemappings(const UDlgSystemSettings& Settings);
+	void GetAssociatedParticipants(TArray<FGameplayTag>& OutArray) const;
+
+	// Sets the RawNodeText of the Node and rebuilds the constructed text
+	void SetNodeText(const FText& InText, const TArray<FDlgTextArgument>& InArguments);
+
+	const FText& GetNodeText() const;
+	const FText& GetNodeUnformattedText() const { return Text; }
+
+	// Helper functions to get the names of some properties. Used by the DlgSystemEditor module
+	static FName GetMemberNameText() { return GET_MEMBER_NAME_CHECKED(FDlgSpeechSequenceEntry, Text); }
+	static FName GetMemberNameTextArguments() { return GET_MEMBER_NAME_CHECKED(FDlgSpeechSequenceEntry, TextArguments); }
+
+public:
 	// The Participant Name (speaker) associated with this speech entry.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Dialogue|Node", Meta = (DisplayName = "Participant Name", DeprecatedProperty, DeprecationMessage = "Use Participant Tag in stead"))
 	FName Speaker;
@@ -25,10 +43,6 @@ public:
 	// The Participant Tag (speaker) associated with this speech entry.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Node", Meta = (DisplayName = "Participant Tag", Categories="Dlg"))
 	FGameplayTag SpeakerTag;
-
-	// Text that will appear when this node participant name speaks to someone else.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Node", Meta = (MultiLine = true))
-	FText Text;
 
 	// Text that will appear when you want to continue down this edge to the next conversation. Usually "Next".
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Node", Meta = (MultiLine = true))
@@ -56,6 +70,18 @@ public:
 	// NOTE: You should probably use the NodeData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Node", Meta = (DlgSaveOnlyReference))
 	UObject* GenericData = nullptr;
+
+protected:
+	// Text that will appear when this node participant name speaks to someone else.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Node", Meta = (MultiLine = true))
+	FText Text;
+
+	// If you want replaceable portions inside your Text nodes just add {identifier} inside it and set the value it should have at runtime.
+	UPROPERTY(EditAnywhere, EditFixedSize, Category = "Dialogue|Node")
+	TArray<FDlgTextArgument> TextArguments;
+
+	// Constructed at runtime from the original text and the arguments if there is any.
+	FText ConstructedText;
 };
 
 
@@ -85,6 +111,10 @@ public:
 	bool HandleNodeEnter(UDlgContext& Context, TSet<const UDlgNode*> NodesEnteredWithThisStep) override;
 	bool ReevaluateChildren(UDlgContext& Context, TSet<const UDlgNode*> AlreadyEvaluated) override;
 	bool OptionSelected(int32 OptionIndex, bool bFromAll, UDlgContext& Context) override;
+	void RebuildConstructedText(const UDlgContext& Context) override;
+	void RebuildTextArguments(bool bEdges, bool bUpdateGraphNode = true) override;
+	/** Returns all text arguments of all sequence entries.*/
+	const TArray<FDlgTextArgument>& GetTextArguments() const override { return _TextArguments; };
 
 	// Getters
 	const FText& GetNodeText() const override;
@@ -142,4 +172,9 @@ protected:
 
 	// The current active index in the SpeechSequence array
 	int32 ActualIndex = INDEX_NONE;
+
+private:
+	// Compelte array fo all text arguments used by the speech sequence entries.
+	UPROPERTY()
+	TArray<FDlgTextArgument> _TextArguments;
 };

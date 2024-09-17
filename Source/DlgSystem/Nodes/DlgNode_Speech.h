@@ -97,9 +97,13 @@ public:
 	virtual void SetIsVirtualParent(bool bValue) { bIsVirtualParent = bValue; }
 
 	// Sets the RawNodeText of the Node and rebuilds the constructed text
-	virtual void SetNodeText(const FText& InText)
+	virtual void SetNodeText(const FText& InText, const TArray<FDlgTextArgument>& InArguments)
 	{
 		Text = InText;
+		if (TextArguments.Num() == 0 && InArguments.Num() > 0)
+		{
+			TextArguments = InArguments;
+		}
 		RebuildTextArguments(false);
 	}
 

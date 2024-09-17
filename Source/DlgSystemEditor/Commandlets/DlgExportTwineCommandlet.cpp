@@ -388,7 +388,7 @@ FString UDlgExportTwineCommandlet::CreateTwinePassageDataFromNode(const UDlgDial
 				TEXT("``Text:`` //%s//\n")
 				TEXT("``EdgeText:`` //%s//\n"),
 				*EscapeHtml(Entry.SpeakerTag.ToString()),
-				*EscapeHtml(Entry.Text.ToString()),
+				*EscapeHtml(Entry.GetNodeUnformattedText().ToString()),
 				*EscapeHtml(Entry.EdgeText.ToString())
 			);
 

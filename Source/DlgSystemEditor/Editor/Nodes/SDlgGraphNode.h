@@ -132,7 +132,7 @@ protected:
 	{
 		if (DialogueGraphNode && DialogueGraphNode->IsSpeechSequenceNode())
 		{
-			return GetSpeechSequenceEntries()[SpeechEntryIndex].Text;
+			return GetSpeechSequenceEntries()[SpeechEntryIndex].GetNodeUnformattedText();
 		}
 
 		return FText::GetEmpty();
