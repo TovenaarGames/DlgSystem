@@ -116,7 +116,7 @@ FText UDialogueGraphNode::GetNodeTitle(ENodeTitleType::Type TitleType) const
 		}
 	}
 
-	const FString FullString = UBSDlgFunctions::GetParticipantLeafTag(DialogueNode->GetNodeParticipantTag());
+	const FString FullString = UBSDlgFunctions::GetParticipantLeafTagAsString(DialogueNode->GetNodeParticipantTag());
 	// Display the full title
 	return FText::FromString(FullString);
 }

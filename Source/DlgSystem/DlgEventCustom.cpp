@@ -6,7 +6,7 @@
 
 FString UDlgEventCustom::GetEditorDisplayString_Implementation(UDlgDialogue* OwnerDialogue, const FGameplayTag& ParticipantTag)
 {
-	const FString TargetPreFix = UBSDlgFunctions::IsValidParticipantTag(ParticipantTag) ? FString::Printf(TEXT("[%s] "), *UBSDlgFunctions::GetParticipantLeafTag(ParticipantTag)) : TEXT("");
+	const FString TargetPreFix = UBSDlgFunctions::IsValidParticipantTag(ParticipantTag) ? FString::Printf(TEXT("[%s] "), *UBSDlgFunctions::GetParticipantLeafTagAsString(ParticipantTag)) : TEXT("");
 #if WITH_EDITOR
 	return TargetPreFix + GetClass()->GetDisplayNameText().ToString();
 #else

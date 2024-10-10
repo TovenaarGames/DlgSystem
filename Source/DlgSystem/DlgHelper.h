@@ -572,6 +572,24 @@ public:
 	}
 };
 
+
+UENUM()
+enum class EDlgParticipantTagType : uint8
+{
+	/** Root tag: "Dlg"*/
+	ROOT = 0		UMETA(DisplayName="Root"),
+
+	/** Type tag: "Hero", "Frog" ...*/
+	TYPE			UMETA(DisplayName = "Type"),
+
+	/** Participant leaf tag: "Mentor", Cook" ...*/
+	PARTICIPANT		UMETA(DisplayName = "Participant"),
+
+	/** INVALID/Wildcard for some functions.*/
+	MAX				
+};
+
+
 /*
 * Helper functions for the item types
 */
@@ -583,11 +601,23 @@ class DLGSYSTEM_API UBSDlgFunctions : public UBlueprintFunctionLibrary
 public:
 	/** Returns true if tag is a valid participant tag.
 	* @param Tag: the tag which is validated.
+	* @param DesiredType: desired type of the tag. Use MAX as a wildcard
 	*/
 	UFUNCTION(BlueprintCallable)
-	static bool IsValidParticipantTag(const FGameplayTag& ParticipantTag);
+	static bool IsValidParticipantTag(const FGameplayTag& ParticipantTag, EDlgParticipantTagType DesiredType = EDlgParticipantTagType::MAX);
+
+	/*
+	* Get the type of the  participant gameplay tag.
+	* return: MAX if invalid.
+	*/
+	UFUNCTION(BlueprintCallable)
+	static EDlgParticipantTagType GetParticipantTagType(const FGameplayTag& ParticipantTag);
 
 	/** Returns only the last part of the gameplay tag as a string.*/
 	UFUNCTION(BlueprintCallable)
-	static FString GetParticipantLeafTag(const FGameplayTag& ParticipantTag);
+	static FString GetParticipantLeafTagAsString(const FGameplayTag& ParticipantTag);
+
+	/** Returns only the last 2 parts of the gameplay tag.*/
+	UFUNCTION(BlueprintCallable)
+	static FGameplayTag GetParticipantTypeTag(const FGameplayTag& ParticipantTag);
 };

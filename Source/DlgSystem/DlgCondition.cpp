@@ -294,7 +294,7 @@ FString FDlgCondition::GetEditorDisplayString(UDlgDialogue* OwnerDialogue) const
 {
 	auto GetOther = [&](const FString& ConstAsString) -> FString
 	{
-		const FString OtherAsString = FString(TEXT("[")) + UBSDlgFunctions::GetParticipantLeafTag(OtherParticipantTag) + FString(TEXT("] "));
+		const FString OtherAsString = FString(TEXT("[")) + UBSDlgFunctions::GetParticipantLeafTagAsString(OtherParticipantTag) + FString(TEXT("] "));
 		switch (CompareType)
 		{
 			case EDlgCompare::ToConst:

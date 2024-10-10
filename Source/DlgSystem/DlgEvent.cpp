@@ -79,7 +79,7 @@ void FDlgEvent::Call(UDlgContext& Context, const FString& ContextString, UObject
 
 FString FDlgEvent::GetEditorDisplayString(UDlgDialogue* OwnerDialogue) const
 {
-	const FString TargetPreFix = UBSDlgFunctions::IsValidParticipantTag(ParticipantTag) ? (FString(TEXT("[")) + UBSDlgFunctions::GetParticipantLeafTag(ParticipantTag) + FString(TEXT("] "))) : TEXT("");
+	const FString TargetPreFix = UBSDlgFunctions::IsValidParticipantTag(ParticipantTag) ? (FString(TEXT("[")) + UBSDlgFunctions::GetParticipantLeafTagAsString(ParticipantTag) + FString(TEXT("] "))) : TEXT("");
 
 	auto GetSignCharIfNegative = [](auto Number) -> FString
 	{

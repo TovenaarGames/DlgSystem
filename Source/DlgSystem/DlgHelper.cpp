@@ -294,16 +294,32 @@ TMap<FGameplayTag, TArray<FDlgClassAndObject>> FDlgHelper::ConvertDialoguePartic
 }
 
 
-bool UBSDlgFunctions::IsValidParticipantTag(const FGameplayTag& ParticipantTag)
+bool UBSDlgFunctions::IsValidParticipantTag(const FGameplayTag& ParticipantTag, EDlgParticipantTagType DesiredType)
 {
 	return ParticipantTag.IsValid() &&
-		ParticipantTag.MatchesTag(TAG_Dlg);
+		ParticipantTag.MatchesTag(TAG_Dlg) &&
+		(DesiredType == EDlgParticipantTagType::MAX || GetParticipantTagType(ParticipantTag) == DesiredType);
 }
 
 
-FString UBSDlgFunctions::GetParticipantLeafTag(const FGameplayTag& ParticipantTag)
+EDlgParticipantTagType UBSDlgFunctions::GetParticipantTagType(const FGameplayTag& ParticipantTag)
 {
-	if (IsValidParticipantTag(ParticipantTag))
+	if (ParticipantTag.MatchesTag(TAG_Dlg))
+	{
+		const uint8 enum_value = UGameplayTagsManager::Get().GetNumberOfTagNodes(ParticipantTag) - 1;
+		if (enum_value <= (uint8)EDlgParticipantTagType::MAX)
+		{
+			return EDlgParticipantTagType(enum_value);
+		}
+	}
+
+	return EDlgParticipantTagType::MAX;
+}
+
+
+FString UBSDlgFunctions::GetParticipantLeafTagAsString(const FGameplayTag& ParticipantTag)
+{
+	if (IsValidParticipantTag(ParticipantTag, EDlgParticipantTagType::PARTICIPANT))
 	{
 		// Convert the gameplay tag to a string
 		FString TagString = ParticipantTag.ToString();
@@ -326,4 +342,24 @@ FString UBSDlgFunctions::GetParticipantLeafTag(const FGameplayTag& ParticipantTa
 	}
 
 	return FString("None");
+}
+
+
+FGameplayTag UBSDlgFunctions::GetParticipantTypeTag(const FGameplayTag& ParticipantTag)
+{
+	EDlgParticipantTagType type = GetParticipantTagType(ParticipantTag);
+
+	switch (type)
+	{
+	case EDlgParticipantTagType::PARTICIPANT:
+		return UGameplayTagsManager::Get().RequestGameplayTagDirectParent(ParticipantTag);
+	case EDlgParticipantTagType::TYPE:
+		return ParticipantTag;
+	default:
+		break;
+	}
+
+	// Fallback;
+	ensure(false);
+	return FGameplayTag::EmptyTag;
 }

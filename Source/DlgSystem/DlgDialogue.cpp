@@ -16,6 +16,7 @@
 #include "IO/DlgJsonWriter.h"
 #include "IO/DlgJsonParser.h"
 #include "Nodes/DlgNode_Speech.h"
+#include "Nodes/DlgNode_SpeechSequence.h"
 #include "Nodes/DlgNode_End.h"
 #include "Nodes/DlgNode_Start.h"
 #include "DlgManager.h"
@@ -699,7 +700,7 @@ void UDlgDialogue::UpdateAndRefreshData(bool bUpdateTextsNamespacesAndKeys)
 	{
 		const FString NodeContext = FString::Printf(TEXT("Node %d"), NodeIndex);
 		UDlgNode* Node = Nodes[NodeIndex];
-		const FGameplayTag& NodeParticipantName = Node->GetNodeParticipantTag();
+		const FGameplayTag& NodeParticipantTag = Node->GetNodeParticipantTag();
 
 		// Rebuild & Update
 		RebuildAndUpdateNode(Node, *Settings, bUpdateTextsNamespacesAndKeys);
@@ -724,13 +725,13 @@ void UDlgDialogue::UpdateAndRefreshData(bool bUpdateTextsNamespacesAndKeys)
 			if (Condition.IsParticipantInvolved())
 			{
 				const FString ContextMessage = FString::Printf(TEXT("Adding primary condition data for %s"), *NodeContext);
-				GetParticipantDataEntry(Condition.ParticipantTag, NodeParticipantName, true, ContextMessage)
+				GetParticipantDataEntry(Condition.ParticipantTag, NodeParticipantTag, true, ContextMessage)
 					.AddConditionPrimaryData(Condition);
 			}
 			if (Condition.IsSecondParticipantInvolved())
 			{
 				const FString ContextMessage = FString::Printf(TEXT("Adding secondary condition data for %s"), *NodeContext);
-				GetParticipantDataEntry(Condition.OtherParticipantTag, NodeParticipantName, true, ContextMessage)
+				GetParticipantDataEntry(Condition.OtherParticipantTag, NodeParticipantTag, true, ContextMessage)
 					.AddConditionSecondaryData(Condition);
 			}
 		}
@@ -754,7 +755,7 @@ void UDlgDialogue::UpdateAndRefreshData(bool bUpdateTextsNamespacesAndKeys)
 			for (const FDlgTextArgument& TextArgument : Edge.GetTextArguments())
 			{
 				const FString ContextMessage = FString::Printf(TEXT("Adding Edge text arguments data from %s, to Node %d"), *NodeContext, TargetIndex);
-				GetParticipantDataEntry(TextArgument.ParticipantTag, NodeParticipantName, true, ContextMessage)
+				GetParticipantDataEntry(TextArgument.ParticipantTag, NodeParticipantTag, true, ContextMessage)
 					.AddTextArgumentData(TextArgument);
 			}
 		}
@@ -763,16 +764,32 @@ void UDlgDialogue::UpdateAndRefreshData(bool bUpdateTextsNamespacesAndKeys)
 		for (const FDlgEvent& Event : Node->GetNodeEnterEvents())
 		{
 			const FString ContextMessage = FString::Printf(TEXT("Adding events data for %s"), *NodeContext);
-			GetParticipantDataEntry(Event.ParticipantTag, NodeParticipantName, true, ContextMessage)
+			GetParticipantDataEntry(Event.ParticipantTag, NodeParticipantTag, true, ContextMessage)
 				.AddEventData(Event);
 		}
 
 		// Text arguments
-		for (const FDlgTextArgument& TextArgument : Node->GetTextArguments())
+		if (UDlgNode_SpeechSequence* node_speech_sequence = Cast<UDlgNode_SpeechSequence>(Node))
 		{
-			const FString ContextMessage = FString::Printf(TEXT("Adding text arguments data for %s"), *NodeContext);
-			GetParticipantDataEntry(TextArgument.ParticipantTag, NodeParticipantName, true, ContextMessage)
-				.AddTextArgumentData(TextArgument);
+			for (const FDlgSpeechSequenceEntry& Entry : node_speech_sequence->GetNodeSpeechSequence())
+			{
+				for(const FDlgTextArgument& TextArgument : Entry.GetTextArguments())
+				{
+					const FString ContextMessage = FString::Printf(TEXT("Adding text arguments data for %s"), *NodeContext);
+					FGameplayTag fallback_tag = UBSDlgFunctions::IsValidParticipantTag(Entry.SpeakerTag) ? Entry.SpeakerTag : NodeParticipantTag;
+					GetParticipantDataEntry(TextArgument.ParticipantTag, fallback_tag, true, ContextMessage)
+						.AddTextArgumentData(TextArgument);
+				}
+			}
+		}
+		else
+		{
+			for (const FDlgTextArgument& TextArgument : Node->GetTextArguments())
+			{
+				const FString ContextMessage = FString::Printf(TEXT("Adding text arguments data for %s"), *NodeContext);
+				GetParticipantDataEntry(TextArgument.ParticipantTag, NodeParticipantTag, true, ContextMessage)
+					.AddTextArgumentData(TextArgument);
+			}
 		}
 	}
 

@@ -143,7 +143,7 @@ protected:
 	{
 		if (DialogueGraphNode && DialogueGraphNode->IsSpeechSequenceNode())
 		{
-			return FText::FromString(UBSDlgFunctions::GetParticipantLeafTag(GetSpeechSequenceEntries()[SpeechEntryIndex].SpeakerTag));
+			return FText::FromString(UBSDlgFunctions::GetParticipantLeafTagAsString(GetSpeechSequenceEntries()[SpeechEntryIndex].SpeakerTag));
 		}
 
 		return FText::GetEmpty();
