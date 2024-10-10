@@ -14,31 +14,31 @@ UENUM(BlueprintType)
 enum class EDlgEventType : uint8
 {
 	// Calls OnDialogueEvent on the Participant
-	Event						UMETA(DisplayName = "Event"),
+	Event						UMETA(DisplayName = "Event", Hidden),
 
 	// Calls ModifyIntValue on the Participant
-	ModifyInt					UMETA(DisplayName = "Modify Dialogue Int Value"),
+	ModifyInt					UMETA(DisplayName = "Modify Dialogue Int Value", Hidden),
 
 	// Calls ModifyFloatValue on the Participant
-	ModifyFloat					UMETA(DisplayName = "Modify Dialogue Float Value"),
+	ModifyFloat					UMETA(DisplayName = "Modify Dialogue Float Value", Hidden),
 
 	// Calls ModifyBoolValue on the Participant
-	ModifyBool					UMETA(DisplayName = "Modify Dialogue Bool Value"),
+	ModifyBool					UMETA(DisplayName = "Modify Dialogue Bool Value", Hidden),
 
 	// Calls ModifyNameValue on the Participant
-	ModifyName					UMETA(DisplayName = "Modify Dialogue Name Value"),
+	ModifyName					UMETA(DisplayName = "Modify Dialogue Name Value", Hidden),
 
 	// Modifies the value from the Participant Int Variable
-	ModifyClassIntVariable		UMETA(DisplayName = "Modify Class Int Variable"),
+	ModifyClassIntVariable		UMETA(DisplayName = "Modify Class Int Variable", Hidden),
 
 	// Modifies the value from the Participant Float Variable (Double Precision, double for c++)
-	ModifyClassFloatVariable	UMETA(DisplayName = "Modify Class Float (Double Precision) Variable"),
+	ModifyClassFloatVariable	UMETA(DisplayName = "Modify Class Float (Double Precision) Variable", Hidden),
 
 	// Modifies the value from the Participant Bool Variable
-	ModifyClassBoolVariable		UMETA(DisplayName = "Modify Class Bool Variable"),
+	ModifyClassBoolVariable		UMETA(DisplayName = "Modify Class Bool Variable", Hidden),
 
 	// Modifies the value from the Participant Name Variable
-	ModifyClassNameVariable		UMETA(DisplayName = "Modify Class Name Variable"),
+	ModifyClassNameVariable		UMETA(DisplayName = "Modify Class Name Variable", Hidden),
 
 	// User Defined Event, calls EnterEvent on the custom event object.
 	//
