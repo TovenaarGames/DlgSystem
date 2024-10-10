@@ -23,19 +23,19 @@ enum class EDlgTextArgumentType : uint8
 	Gender			UMETA(DisplayName = "Participant Gender"),
 
 	// Calls GetIntValue on the Participant
-	DialogueInt 	UMETA(DisplayName = "Dialogue Int Value"),
+	DialogueInt 	UMETA(DisplayName = "Dialogue Int Value", Hidden),
 
 	// Calls GetFloatValue on the Participant
-	DialogueFloat	UMETA(DisplayName = "Dialogue Float Value"),
+	DialogueFloat	UMETA(DisplayName = "Dialogue Float Value", Hidden),
 
 	// Gets the value from the Participant Int Variable
-	ClassInt 		UMETA(DisplayName = "Class Int Variable"),
+	ClassInt 		UMETA(DisplayName = "Class Int Variable", Hidden),
 
 	// Gets the value from the Participant Float Variable
-	ClassFloat		UMETA(DisplayName = "Class Float Variable"),
+	ClassFloat		UMETA(DisplayName = "Class Float Variable", Hidden),
 
 	// Gets the value from the Participant Text Variable
-	ClassText		UMETA(DisplayName = "Class Text Variable"),
+	ClassText		UMETA(DisplayName = "Class Text Variable", Hidden),
 
 
 	// User Defined Text Argument, calls GetText on the custom text argument object.
@@ -86,7 +86,7 @@ public:
 	FString DisplayString;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|TextArgument")
-	EDlgTextArgumentType Type = EDlgTextArgumentType::DisplayName;
+	EDlgTextArgumentType Type = EDlgTextArgumentType::Custom;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Dialogue|TextArgument", meta=(DeprecatedProperty, DeprecatedMessage="Use ParticipantTag"))
 	FName ParticipantName;
