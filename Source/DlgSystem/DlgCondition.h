@@ -29,32 +29,32 @@ UENUM(BlueprintType)
 enum class EDlgConditionType : uint8
 {
 	// Calls GetIntValue on the Participant
-	IntCall = 0		UMETA(DisplayName = "Check Dialogue Int Value"),
+	IntCall = 0		UMETA(DisplayName = "Check Dialogue Int Value", Hidden),
 
 	// Calls GetFloatValue on the Participant
-	FloatCall		UMETA(DisplayName = "Check Dialogue Float Value"),
+	FloatCall		UMETA(DisplayName = "Check Dialogue Float Value", Hidden),
 
 	// Calls GetBoolValue on the Participant
-	BoolCall		UMETA(DisplayName = "Check Dialogue Bool Value"),
+	BoolCall		UMETA(DisplayName = "Check Dialogue Bool Value", Hidden),
 
 	// Calls GetNameValue on the Participant
-	NameCall		UMETA(DisplayName = "Check Dialogue Name Value"),
+	NameCall		UMETA(DisplayName = "Check Dialogue Name Value", Hidden),
 
 	// A named condition call.
 	// Calls CheckCondition on the Participant
-	EventCall		UMETA(DisplayName = "Check Dialogue Named Condition"),
+	EventCall		UMETA(DisplayName = "Check Dialogue Named Condition", Hidden),
 
 	// Gets the value from the Participant Int Variable
-	ClassIntVariable	UMETA(DisplayName = "Check Class Int Variable"),
+	ClassIntVariable	UMETA(DisplayName = "Check Class Int Variable", Hidden),
 
 	// Gets the value from the Participant Float Variable
-	ClassFloatVariable	UMETA(DisplayName = "Check Class Float Variable"),
+	ClassFloatVariable	UMETA(DisplayName = "Check Class Float Variable", Hidden),
 
 	// Gets the value from the Participant Bool Variable
-	ClassBoolVariable	UMETA(DisplayName = "Check Class Bool Variable"),
+	ClassBoolVariable	UMETA(DisplayName = "Check Class Bool Variable", Hidden),
 
 	// Gets the value from the Participant Name Variable
-	ClassNameVariable	UMETA(DisplayName = "Check Class Name Variable"),
+	ClassNameVariable	UMETA(DisplayName = "Check Class Name Variable", Hidden),
 
 	// Checks if the target node was already visited
 	WasNodeVisited		UMETA(DisplayName = "Was node already visited?"),
@@ -224,7 +224,7 @@ public:
 
 	// Type of the condition, defines the behavior
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Condition")
-	EDlgConditionType ConditionType = EDlgConditionType::IntCall;
+	EDlgConditionType ConditionType = EDlgConditionType::WasNodeVisited;
 
 	// Name of the participant (speaker) the event is called on.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Dialogue|Condition", meta=(DeprecatedProperty, DeprecationMessage="Use ParticipantTag in stead!"))
