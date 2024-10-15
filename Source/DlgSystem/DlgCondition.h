@@ -113,7 +113,6 @@ public:
 	{
 		return Strength == Other.Strength &&
 			ConditionType == Other.ConditionType &&
-			ParticipantTag.MatchesTagExact(Other.ParticipantTag) &&
 			CallbackName == Other.CallbackName &&
 			IntValue == Other.IntValue &&
 			FMath::IsNearlyEqual(FloatValue, Other.FloatValue) &&
@@ -122,10 +121,11 @@ public:
 			bLongTermMemory == Other.bLongTermMemory &&
 			Operation == Other.Operation &&
 			CompareType == Other.CompareType &&
-			OtherParticipantTag.MatchesTagExact(Other.OtherParticipantTag) &&
 			OtherVariableName == Other.OtherVariableName &&
 			GUID == Other.GUID &&
-			CustomCondition == Other.CustomCondition;
+			CustomCondition == Other.CustomCondition &&
+			(!(ParticipantTag.IsValid() && Other.ParticipantTag.IsValid()) || ParticipantTag.MatchesTagExact(Other.ParticipantTag)) &&
+			(!(OtherParticipantTag.IsValid() && Other.OtherParticipantTag.IsValid()) || OtherParticipantTag.MatchesTagExact(Other.OtherParticipantTag));
 	}
 
 	//
