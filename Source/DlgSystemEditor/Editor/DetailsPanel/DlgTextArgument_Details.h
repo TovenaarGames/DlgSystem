@@ -103,7 +103,7 @@ private:
 
 private:
 	// The current Event type of the struct.
-	EDlgTextArgumentType ArgumentType = EDlgTextArgumentType::DisplayName;
+	EDlgTextArgumentType ArgumentType = EDlgTextArgumentType::Gender;
 
 	// Cache the some property handles
 	TSharedPtr<IPropertyHandle> StructPropertyHandle;

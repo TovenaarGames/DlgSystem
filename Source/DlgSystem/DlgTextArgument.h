@@ -17,7 +17,7 @@ UENUM(BlueprintType)
 enum class EDlgTextArgumentType : uint8
 {
 	// Calls GetParticipantDisplayName on the Participant
-	DisplayName = 0	UMETA(DisplayName = "Participant Display Name"),
+	DisplayName = 0	UMETA(DisplayName = "Participant Display Name", Hidden),
 
 	// Calls GetParticipantGender on the Participant
 	Gender			UMETA(DisplayName = "Participant Gender"),
