@@ -7,6 +7,10 @@
 #include "DlgSystem/Logging/DlgLogger.h"
 #include "DlgSystem/DlgLocalizationHelper.h"
 
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif // WITH_EDITOR
+
 
 void UDlgNode_Speech::OnCreatedInEditor()
 {
@@ -62,6 +66,25 @@ void UDlgNode_Speech::RebuildConstructedText(const UDlgContext& Context)
 	}
 	ConstructedText = FText::AsCultureInvariant(FText::Format(Text, OrderedArguments));
 }
+
+
+#if WITH_EDITOR
+
+EDataValidationResult UDlgNode_Speech::IsDataValid(FDataValidationContext& Context) const
+{
+	bool b_valid = Super::IsDataValid(Context) != EDataValidationResult::Invalid;
+
+	if (!GetNodeParticipantTag().IsValid())
+	{
+		b_valid = false;
+		Context.AddError(FText::FromString(FString::Printf(TEXT("Speech node does not have a participant tag!"))));
+	}
+
+	return b_valid ? EDataValidationResult::Valid : EDataValidationResult::Invalid;
+}
+
+#endif // WITH_EDITOR
+
 
 bool UDlgNode_Speech::HandleNodeEnter(UDlgContext& Context, TSet<const UDlgNode*> NodesEnteredWithThisStep)
 {

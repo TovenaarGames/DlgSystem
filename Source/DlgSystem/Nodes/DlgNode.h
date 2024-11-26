@@ -346,4 +346,9 @@ protected:
 	// Edges that point to Children of this Node
 	UPROPERTY(VisibleAnywhere, EditFixedSize, AdvancedDisplay, Category = "Dialogue|Node")
 	TArray<FDlgEdge> Children;
+
+#if WITH_EDITOR
+public:
+	EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
+#endif
 };

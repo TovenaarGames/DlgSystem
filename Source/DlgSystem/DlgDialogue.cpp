@@ -1029,6 +1029,24 @@ FString UDlgDialogue::GetTextFilePathNameFromAssetPathName(const FString& AssetP
 }
 
 
+#if WITH_EDITOR
+
+EDataValidationResult UDlgDialogue::IsDataValid(FDataValidationContext& Context) const
+{
+	bool b_valid = Super::IsDataValid(Context) != EDataValidationResult::Invalid;
+	for (const UDlgNode* node : GetNodes())
+	{
+		if (node->IsDataValid(Context) == EDataValidationResult::Invalid)
+		{
+			b_valid = false;
+		}
+	}
+	return b_valid ? EDataValidationResult::Valid : EDataValidationResult::Invalid;
+}
+
+#endif // WITH_EDITOR
+
+
 // End own functions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

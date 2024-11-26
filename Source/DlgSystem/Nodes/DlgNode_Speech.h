@@ -176,4 +176,9 @@ protected:
 	FText ConstructedText;
 
 	int32 VirtualParentFirstSatisfiedDirectChildIndex = INDEX_NONE;
+
+#if WITH_EDITOR
+public:
+	EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
+#endif
 };

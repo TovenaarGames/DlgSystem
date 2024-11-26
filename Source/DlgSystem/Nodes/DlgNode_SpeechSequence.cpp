@@ -5,6 +5,10 @@
 #include "DlgSystem/DlgLocalizationHelper.h"
 #include "DlgSystem/DlgHelper.h"
 
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif // WITH_EDITOR
+
 
 #if WITH_EDITOR
 void UDlgNode_SpeechSequence::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
@@ -264,6 +268,29 @@ void UDlgNode_SpeechSequence::AutoGenerateInnerEdges()
 		InnerEdges.Add(Edge);
 	}
 }
+
+
+#if WITH_EDITOR
+
+EDataValidationResult UDlgNode_SpeechSequence::IsDataValid(FDataValidationContext& Context) const
+{
+	bool b_valid = Super::IsDataValid(Context) != EDataValidationResult::Invalid;
+
+	// Validate speech participants
+	for (const FDlgSpeechSequenceEntry& speech_sequence : SpeechSequence)
+	{
+		if (!speech_sequence.SpeakerTag.IsValid())
+		{
+			b_valid = false;
+			Context.AddError(FText::FromString(FString::Printf(TEXT("Speech Sequence node has an entry without SpeakerTag!"))));
+		}
+	}
+
+	return b_valid ? EDataValidationResult::Valid : EDataValidationResult::Invalid;
+}
+
+#endif // WITH_EDITOR
+
 
 void FDlgSpeechSequenceEntry::SetNodeText(const FText& InText, const TArray<FDlgTextArgument>& InArguments)
 {

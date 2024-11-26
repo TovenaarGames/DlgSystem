@@ -788,4 +788,9 @@ public:
 	/** Array of user data stored with the asset (for IInterface_AssetUserData implementation) */
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Instanced, Category = "Asset User Data")
 	TArray<TObjectPtr<UAssetUserData>> AssetUserData;
+
+#if WITH_EDITOR
+public:
+	EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
+#endif
 };

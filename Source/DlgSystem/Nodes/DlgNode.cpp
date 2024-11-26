@@ -10,6 +10,11 @@
 #include "DlgSystem/DlgLocalizationHelper.h"
 #include "DlgSystem/DlgHelper.h"
 
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif // WITH_EDITOR
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Begin UObject interface
 void UDlgNode::Serialize(FArchive& Ar)
@@ -158,6 +163,39 @@ void UDlgNode::FireNodeEnterEvents(UDlgContext& Context)
 		Event.Call(Context, TEXT("FireNodeEnterEvents"), Participant);
 	}
 }
+
+
+#if WITH_EDITOR
+
+EDataValidationResult UDlgNode::IsDataValid(FDataValidationContext& Context) const
+{
+	bool b_valid = Super::IsDataValid(Context) != EDataValidationResult::Invalid;
+
+	// Validate enter conditions
+	for (const FDlgCondition& dlg_condition : EnterConditions)
+	{
+		if (dlg_condition.CustomCondition
+			&& dlg_condition.CustomCondition->IsDataValid(Context) == EDataValidationResult::Invalid)
+		{
+			b_valid = false;
+		}
+	}
+
+	// Validate enter events
+	for (const FDlgEvent& dlg_event :EnterEvents)
+	{
+		if (dlg_event.CustomEvent
+			&& dlg_event.CustomEvent->IsDataValid(Context) == EDataValidationResult::Invalid)
+		{
+			b_valid = false;
+		}
+	}
+
+	return b_valid ? EDataValidationResult::Valid : EDataValidationResult::Invalid;
+}
+
+#endif // WITH_EDITOR
+
 
 bool UDlgNode::ReevaluateChildren(UDlgContext& Context, TSet<const UDlgNode*> AlreadyEvaluated)
 {

@@ -177,4 +177,9 @@ private:
 	// Compelte array fo all text arguments used by the speech sequence entries.
 	UPROPERTY()
 	TArray<FDlgTextArgument> _TextArguments;
+
+#if WITH_EDITOR
+public:
+	EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
+#endif
 };
