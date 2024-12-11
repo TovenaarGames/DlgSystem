@@ -174,20 +174,25 @@ EDataValidationResult UDlgNode::IsDataValid(FDataValidationContext& Context) con
 	// Validate enter conditions
 	for (const FDlgCondition& dlg_condition : EnterConditions)
 	{
-		if (dlg_condition.CustomCondition
-			&& dlg_condition.CustomCondition->IsDataValid(Context) == EDataValidationResult::Invalid)
+
+		if (const UDlgConditionCustom* condition = dlg_condition.CustomCondition)
 		{
-			b_valid = false;
+			if (condition->IsDataValid(Context) == EDataValidationResult::Invalid)
+			{
+				b_valid = false;
+			}
 		}
 	}
 
 	// Validate enter events
 	for (const FDlgEvent& dlg_event :EnterEvents)
 	{
-		if (dlg_event.CustomEvent
-			&& dlg_event.CustomEvent->IsDataValid(Context) == EDataValidationResult::Invalid)
+		if (const UDlgEventCustom* event = dlg_event.CustomEvent)
 		{
-			b_valid = false;
+			if (event->IsDataValid(Context) == EDataValidationResult::Invalid)
+			{
+				b_valid = false;
+			}
 		}
 	}
 
