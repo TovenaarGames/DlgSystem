@@ -15,7 +15,7 @@ struct DLGSYSTEM_API FDlgNodeSavedData
 public:
 
 	// used by random selector node to avoid repetition
-	UPROPERTY()
+	UPROPERTY(SaveGame)
 	TArray<FGuid> GUIDList;
 };
 
@@ -76,18 +76,18 @@ public:
 	// Sed of already visited Node indices
 	// NOTE: if you serialize this but then later change the dialogue node positions this will have the wrong indices
 	// NOTE: You should use VisitedNodeGUIDs
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|History")
+	UPROPERTY(SaveGame, EditAnywhere, BlueprintReadWrite, Category = "Dialogue|History")
 	TSet<int32> VisitedNodeIndices;
 
 	// Set of already visited node GUIDs
 	// This was added to fix Issue 30 (https://gitlab.com/NotYetGames/DlgSystem/-/issues/30)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|History")
+	UPROPERTY(SaveGame, EditAnywhere, BlueprintReadWrite, Category = "Dialogue|History")
 	TSet<FGuid> VisitedNodeGUIDs;
 
 
 	// Key: Dialogue node identifier GUID
 	// Value: data used by the node
-	UPROPERTY()
+	UPROPERTY(SaveGame)
 	TMap<FGuid, FDlgNodeSavedData> NodeData;
 };
 
