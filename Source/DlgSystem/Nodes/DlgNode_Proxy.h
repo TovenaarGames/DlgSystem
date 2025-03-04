@@ -29,7 +29,7 @@ public:
 	// Begin UDlgNode Interface.
 	//
 
-	bool HandleNodeEnter(UDlgContext& Context, TSet<const UDlgNode*> NodesEnteredWithThisStep) override;
+	bool HandleNodeEnter(UDlgContext& Context, bool bFireEnterEvents, TSet<const UDlgNode*> NodesEnteredWithThisStep) override;
 	virtual bool CheckNodeEnterConditions(const UDlgContext& Context, TSet<const UDlgNode*> AlreadyVisitedNodes) const override;
 
 #if WITH_EDITOR

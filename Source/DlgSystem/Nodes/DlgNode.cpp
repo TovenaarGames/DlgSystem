@@ -136,10 +136,13 @@ void UDlgNode::PostEditChangeChainProperty(struct FPropertyChangedChainEvent& Pr
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Begin own function
-bool UDlgNode::HandleNodeEnter(UDlgContext& Context, TSet<const UDlgNode*> NodesEnteredWithThisStep)
+bool UDlgNode::HandleNodeEnter(UDlgContext& Context, bool bFireThisNodeEnterEvents, TSet<const UDlgNode*> NodesEnteredWithThisStep)
 {
-	// Fire all the node enter events
-	FireNodeEnterEvents(Context);
+	if(bFireThisNodeEnterEvents)
+	{
+		// Fire all the node enter events
+		FireNodeEnterEvents(Context);
+	}
 
 	for (FDlgEdge& Edge : Children)
 	{
@@ -314,7 +317,7 @@ bool UDlgNode::OptionSelected(int32 OptionIndex, bool bFromAll, UDlgContext& Con
 		if (AllOptions.IsValidIndex(OptionIndex))
 		{
 			check(AllOptions[OptionIndex].IsValid());
-			return Context.EnterNode(AllOptions[OptionIndex].GetEdge().TargetIndex, {});
+			return Context.EnterNode(AllOptions[OptionIndex].GetEdge().TargetIndex, true, {});
 		}
 
 		FDlgLogger::Get().Errorf(
@@ -328,7 +331,7 @@ bool UDlgNode::OptionSelected(int32 OptionIndex, bool bFromAll, UDlgContext& Con
 		if (AvailableOptions.IsValidIndex(OptionIndex))
 		{
 			check(AvailableOptions[OptionIndex].IsValid());
-			return Context.EnterNode(AvailableOptions[OptionIndex].TargetIndex, {});
+			return Context.EnterNode(AvailableOptions[OptionIndex].TargetIndex, true, {});
 		}
 
 		FDlgLogger::Get().Errorf(

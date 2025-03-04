@@ -89,13 +89,13 @@ void UDlgNode_SpeechSequence::UpdateTextsNamespacesAndKeys(const UDlgSystemSetti
 	Super::UpdateTextsNamespacesAndKeys(Settings, bEdges, bUpdateGraphNode);
 }
 
-bool UDlgNode_SpeechSequence::HandleNodeEnter(UDlgContext& Context, TSet<const UDlgNode*> NodesEnteredWithThisStep)
+bool UDlgNode_SpeechSequence::HandleNodeEnter(UDlgContext& Context, bool bFireThisNodeEnterEvents, TSet<const UDlgNode*> NodesEnteredWithThisStep)
 {
 	ActualIndex = 0;
 
 	RebuildConstructedText(Context);
 
-	return Super::HandleNodeEnter(Context, NodesEnteredWithThisStep);
+	return Super::HandleNodeEnter(Context, bFireThisNodeEnterEvents, NodesEnteredWithThisStep);
 }
 
 bool UDlgNode_SpeechSequence::ReevaluateChildren(UDlgContext& Context, TSet<const UDlgNode*> AlreadyEvaluated)

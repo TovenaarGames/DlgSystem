@@ -366,7 +366,7 @@ public:
 	// Depending on the node the EnterNode() call can lead to other EnterNode() calls - having NodeIndex as active node after the call
 	// is not granted
 	// Conditions are not checked here - they are expected to be satisfied
-	bool EnterNode(int32 NodeIndex, TSet<const UDlgNode*> NodesEnteredWithThisStep);
+	bool EnterNode(int32 NodeIndex, bool bFireEnterEvents, TSet<const UDlgNode*> NodesEnteredWithThisStep);
 
 	// Adds the node as visited in the current dialogue memory
 	virtual void SetNodeVisited(int32 NodeIndex, const FGuid& NodeGUID);
@@ -424,6 +424,7 @@ public:
 		const TMap<FGameplayTag, UObject*>& InParticipants,
 		int32 StartNodeIndex,
 		const FDlgHistory& StartHistory,
+		bool bEnterNode,
 		bool bFireEnterEvents
 	)
 	{
@@ -433,6 +434,7 @@ public:
 			InParticipants,
 			StartNodeIndex,
 			StartHistory,
+			bEnterNode,
 			bFireEnterEvents
 		);
 	}
@@ -442,6 +444,7 @@ public:
 		const TMap<FGameplayTag, UObject*>& InParticipants,
 		int32 StartNodeIndex,
 		const FDlgHistory& StartHistory,
+		bool bEnterNode,
 		bool bFireEnterEvents
 	)
 	{
@@ -456,6 +459,7 @@ public:
 			StartNodeIndex,
 			FGuid{},
 			StartHistory,
+			bEnterNode,
 			bFireEnterEvents
 		);
 	}
@@ -466,6 +470,7 @@ public:
 		const TMap<FGameplayTag, UObject*>& InParticipants,
 		const FGuid& StartNodeGUID,
 		const FDlgHistory& StartHistory,
+		bool bEnterNode,
 		bool bFireEnterEvents
 	)
 	{
@@ -475,6 +480,7 @@ public:
 			InParticipants,
 			StartNodeGUID,
 			StartHistory,
+			bEnterNode,
 			bFireEnterEvents
 		);
 	}
@@ -484,6 +490,7 @@ public:
 		const TMap<FGameplayTag, UObject*>& InParticipants,
 		const FGuid& StartNodeGUID,
 		const FDlgHistory& StartHistory,
+		bool bEnterNode,
 		bool bFireEnterEvents
 	)
 	{
@@ -498,6 +505,7 @@ public:
 			INDEX_NONE,
 			StartNodeGUID,
 			StartHistory,
+			bEnterNode,
 			bFireEnterEvents
 		);
 	}
@@ -511,6 +519,7 @@ public:
 		int32 StartNodeIndex,
 		const FGuid& StartNodeGUID,
 		const FDlgHistory& StartHistory,
+		bool bEnterNode,
 		bool bFireEnterEvents
 	)
 	{
@@ -521,6 +530,7 @@ public:
 			StartNodeIndex,
 			StartNodeGUID,
 			StartHistory,
+			bEnterNode,
 			bFireEnterEvents
 		);
 	}
@@ -531,6 +541,7 @@ public:
 		int32 StartNodeIndex,
 		const FGuid& StartNodeGUID,
 		const FDlgHistory& StartHistory,
+		bool bEnterNode,
 		bool bFireEnterEvents
 	);
 

@@ -38,9 +38,12 @@ const FText& UDlgNode_Selector::GetNodeText() const
 	}
 }
 
-bool UDlgNode_Selector::HandleNodeEnter(UDlgContext& Context, TSet<const UDlgNode*> NodesEnteredWithThisStep)
+bool UDlgNode_Selector::HandleNodeEnter(UDlgContext& Context, bool bFireThisNodeEnterEvents, TSet<const UDlgNode*> NodesEnteredWithThisStep)
 {
-	FireNodeEnterEvents(Context);
+	if(bFireThisNodeEnterEvents)
+	{
+		FireNodeEnterEvents(Context);
+	}
 
 	if (NodesEnteredWithThisStep.Contains(this))
 	{
@@ -64,7 +67,7 @@ bool UDlgNode_Selector::HandleNodeEnter(UDlgContext& Context, TSet<const UDlgNod
 			{
 				if (Edge.Evaluate(Context, { this }))
 				{
-					return Context.EnterNode(Edge.TargetIndex, NodesEnteredWithThisStep);
+					return Context.EnterNode(Edge.TargetIndex, true, NodesEnteredWithThisStep);
 				}
 			}
 			break;
@@ -76,7 +79,7 @@ bool UDlgNode_Selector::HandleNodeEnter(UDlgContext& Context, TSet<const UDlgNod
 			const int32 ChildNodeIndex = GetRandomChildNodeIndex(Context);
 			if (ChildNodeIndex != INDEX_NONE)
 			{
-				return Context.EnterNode(ChildNodeIndex, NodesEnteredWithThisStep);
+				return Context.EnterNode(ChildNodeIndex, true, NodesEnteredWithThisStep);
 			}
 		}
 

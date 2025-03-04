@@ -136,6 +136,7 @@ UDlgContext* UDlgManager::ResumeDialogueFromNodeIndex(
 	UPARAM(ref)const TArray<UObject*>& Participants,
 	int32 StartNodeIndex,
 	const TSet<int32>& AlreadyVisitedNodes,
+	bool bEnterNode,
 	bool bFireEnterEvents
 )
 {
@@ -149,7 +150,7 @@ UDlgContext* UDlgManager::ResumeDialogueFromNodeIndex(
 	auto* Context = NewObject<UDlgContext>(Participants[0], UDlgContext::StaticClass());
 	FDlgHistory History;
 	History.VisitedNodeIndices = AlreadyVisitedNodes;
-	if (Context->StartWithContextFromNodeIndex(ContextMessage, Dialogue, ParticipantBinding, StartNodeIndex, History, bFireEnterEvents))
+	if (Context->StartWithContextFromNodeIndex(ContextMessage, Dialogue, ParticipantBinding, StartNodeIndex, History, bEnterNode, bFireEnterEvents))
 	{
 		return Context;
 	}
@@ -162,6 +163,7 @@ UDlgContext* UDlgManager::ResumeDialogueFromNodeGUID(
 	UPARAM(ref)const TArray<UObject*>& Participants,
 	const FGuid& StartNodeGUID,
 	const TSet<FGuid>& AlreadyVisitedNodes,
+	bool bEnterNode,
 	bool bFireEnterEvents
 )
 {
@@ -175,7 +177,7 @@ UDlgContext* UDlgManager::ResumeDialogueFromNodeGUID(
 	auto* Context = NewObject<UDlgContext>(Participants[0], UDlgContext::StaticClass());
 	FDlgHistory History;
 	History.VisitedNodeGUIDs = AlreadyVisitedNodes;
-	if (Context->StartWithContextFromNodeGUID(ContextMessage, Dialogue, ParticipantBinding, StartNodeGUID, History, bFireEnterEvents))
+	if (Context->StartWithContextFromNodeGUID(ContextMessage, Dialogue, ParticipantBinding, StartNodeGUID, History, bEnterNode, bFireEnterEvents))
 	{
 		return Context;
 	}

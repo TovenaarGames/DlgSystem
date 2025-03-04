@@ -4,9 +4,12 @@
 #include "DlgSystem/DlgContext.h"
 #include "DlgSystem/Logging/DlgLogger.h"
 
-bool UDlgNode_Proxy::HandleNodeEnter(UDlgContext& Context, TSet<const UDlgNode*> NodesEnteredWithThisStep)
+bool UDlgNode_Proxy::HandleNodeEnter(UDlgContext& Context, bool bFireEnterEvents, TSet<const UDlgNode*> NodesEnteredWithThisStep)
 {
-	FireNodeEnterEvents(Context);
+	if(bFireEnterEvents)
+	{
+		FireNodeEnterEvents(Context);
+	}
 
 	if (NodesEnteredWithThisStep.Contains(this))
 	{
@@ -21,7 +24,7 @@ bool UDlgNode_Proxy::HandleNodeEnter(UDlgContext& Context, TSet<const UDlgNode*>
 	}
 	NodesEnteredWithThisStep.Add(this);
 
-	return Context.EnterNode(NodeIndex, NodesEnteredWithThisStep);
+	return Context.EnterNode(NodeIndex, true, NodesEnteredWithThisStep);
 }
 
 bool UDlgNode_Proxy::CheckNodeEnterConditions(const UDlgContext& Context, TSet<const UDlgNode*> AlreadyVisitedNodes) const

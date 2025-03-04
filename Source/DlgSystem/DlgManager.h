@@ -99,6 +99,7 @@ public:
 		UPARAM(ref)const TArray<UObject*>& Participants,
 		UPARAM(DisplayName="Start Node Index") int32 StartIndex,
 		const TSet<int32>& AlreadyVisitedNodes,
+		bool bEnterNode,
 		bool bFireEnterEvents
 	);
 
@@ -126,6 +127,7 @@ public:
 		UPARAM(ref)const TArray<UObject*>& Participants,
 		const FGuid& StartNodeGUID,
 		const TSet<FGuid>& AlreadyVisitedNodes,
+		bool bEnterNode,
 		bool bFireEnterEvents
 	);
 

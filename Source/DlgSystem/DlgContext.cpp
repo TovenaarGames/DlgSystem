@@ -498,7 +498,7 @@ bool UDlgContext::IsOptionConnectedToEndNode(int32 Index, bool bIndexSkipsUnsati
 	return false;
 }
 
-bool UDlgContext::EnterNode(int32 NodeIndex, TSet<const UDlgNode*> NodesEnteredWithThisStep)
+bool UDlgContext::EnterNode(int32 NodeIndex, bool bFireEnterEvents, TSet<const UDlgNode*> NodesEnteredWithThisStep)
 {
 	check(Dialogue);
 	UDlgNode* Node = GetMutableNodeFromIndex(NodeIndex);
@@ -511,7 +511,7 @@ bool UDlgContext::EnterNode(int32 NodeIndex, TSet<const UDlgNode*> NodesEnteredW
 	ActiveNodeIndex = NodeIndex;
 	SetNodeVisited(NodeIndex, Node->GetGUID());
 
-	return Node->HandleNodeEnter(*this, NodesEnteredWithThisStep);
+	return Node->HandleNodeEnter(*this, bFireEnterEvents, NodesEnteredWithThisStep);
 }
 
 UDlgContext* UDlgContext::CreateCopy() const
@@ -693,7 +693,7 @@ bool UDlgContext::StartWithContext(const FString& ContextString, UDlgDialogue* I
 		{
 			if (ChildLink.Evaluate(*this, {}))
 			{
-				if (EnterNode(ChildLink.TargetIndex, {}))
+				if (EnterNode(ChildLink.TargetIndex, true, {}))
 				{
 					return true;
 				}
@@ -715,6 +715,7 @@ bool UDlgContext::StartWithContextFromNode(
 	int32 StartNodeIndex,
 	const FGuid& StartNodeGUID,
 	const FDlgHistory& StartHistory,
+	bool bEnterNode,
 	bool bFireEnterEvents
 )
 {
@@ -746,9 +747,9 @@ bool UDlgContext::StartWithContextFromNode(
 		return false;
 	}
 
-	if (bFireEnterEvents)
+	if (bEnterNode)
 	{
-		return EnterNode(StartNodeIndex, {});
+		return EnterNode(StartNodeIndex, bFireEnterEvents, {});
 	}
 
 	ActiveNodeIndex = StartNodeIndex;
