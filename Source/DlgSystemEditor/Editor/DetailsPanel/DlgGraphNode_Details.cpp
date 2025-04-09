@@ -4,6 +4,7 @@
 #include "DetailCategoryBuilder.h"
 #include "DetailLayoutBuilder.h"
 
+#include "DlgSystem/DlgConstants.h"
 #include "DlgSystem/Nodes/DlgNode.h"
 #include "DlgSystem/Nodes/DlgNode_SpeechSequence.h"
 #include "DlgSystem/Nodes/DlgNode_Speech.h"
@@ -17,6 +18,9 @@
 #include "DlgSystemEditor/Editor/DetailsPanel/Widgets/DlgIntTextBox_CustomRowHelper.h"
 
 #include "Widgets/Input/SButton.h"
+#include "PropertyCustomizationHelpers.h"
+#include "Internationalization/StringTableCore.h"
+#include "Internationalization/StringTable.h"
 
 #define LOCTEXT_NAMESPACE "DialoguGraphNode_Details"
 
@@ -246,6 +250,83 @@ void FDlgGraphNode_Details::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
 		IDetailCategoryBuilder& SpeechSequenceDataCategory = DetailLayoutBuilder->EditCategory(TEXT("Speech Sequence Node"));
 		SpeechSequenceDataCategory.InitiallyCollapsed(false)
 			.RestoreExpansionState(true);
+
+		// Add a speech sequence generation tool
+		SpeechSequenceDataCategory.AddCustomRow(FText::FromName(GET_MEMBER_NAME_CHECKED(FDlgGraphNode_Details, StringTableSource)))
+			.NameContent()
+			[
+				SNew(STextBlock)
+					.Text(FText::FromString("String Table"))
+					.TextStyle(FAppStyle::Get(), "SmallText")
+					.ToolTipText(FText::FromString("The string table to source the text from."))
+			]
+			.ValueContent()
+			[
+				SNew(SObjectPropertyEntryBox)
+					.AllowedClass(UStringTable::StaticClass())
+					.DisplayBrowse(true)
+					.EnableContentPicker(true)
+					.ObjectPath_Lambda([this]()
+						{
+							if (StringTableSource)
+							{
+								return StringTableSource->GetPathName();
+							}
+							return FString();
+						})
+					.OnObjectChanged_Lambda([this](const FAssetData& InAssetData)
+						{
+							StringTableSource = Cast<UStringTable>(InAssetData.GetAsset());
+						})
+			];
+
+		SpeechSequenceDataCategory.AddCustomRow(FText::FromName(GET_MEMBER_NAME_CHECKED(FDlgGraphNode_Details, FromStringTableLineID)))
+			.NameContent()
+			[
+				SNew(STextBlock)
+					.Text(FText::FromString("From Line ID"))
+					.TextStyle(FAppStyle::Get(), "SmallText")
+					.ToolTipText(FText::FromString("The ID of the first line in the String table to generate speech sequences from."))
+			]
+			.ValueContent()
+			[
+				SNew(SEditableTextBox)
+					.OnTextChanged_Lambda([this](const FText& InValue)
+						{
+							FromStringTableLineID = InValue;
+						})
+			];
+
+		SpeechSequenceDataCategory.AddCustomRow(FText::FromName(GET_MEMBER_NAME_CHECKED(FDlgGraphNode_Details, ToStringTableLineID)))
+			.NameContent()
+			[
+				SNew(STextBlock)
+					.Text(FText::FromString("To Line ID"))
+					.TextStyle(FAppStyle::Get(), "SmallText")
+					.ToolTipText(FText::FromString("The ID of the last line in the String table to generate speech sequences from."))
+			]
+			.ValueContent()
+			[
+				SNew(SEditableTextBox)
+					.OnTextChanged_Lambda([this](const FText& InValue)
+						{
+							ToStringTableLineID = InValue;
+						})
+			];
+
+		SpeechSequenceDataCategory.AddCustomRow(FText::FromString("Generate Speech Sequence Button"))
+			.NameContent()
+			[
+				SNew(STextBlock)
+			]
+			.ValueContent()
+			[
+				SNew(SButton)
+					.Text(FText::FromString("Generate"))
+					.OnClicked(this, &FDlgGraphNode_Details::OnGenerateSpeechSequenceButtonClicked)
+			];
+
+		// Add Speech sequences
 		SpeechSequenceDataCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode_SpeechSequence::GetMemberNameSpeechSequence()))
 			.ShouldAutoExpand(true);;
 	}
@@ -265,9 +346,255 @@ void FDlgGraphNode_Details::HandleTextChanged(const FText& InText)
 }
 
 
+bool FDlgGraphNode_Details::ParseDialogueStringTableKey(const FString& InKey, FString& OutIdentifier, int32& OutSequenceNumber, FString& OutParticipantName) const
+{
+	TArray<FString> InKeyArray;
+	InKey.ParseIntoArray(InKeyArray, TEXT("_"));
+
+	if (InKeyArray.Num() < 3)
+	{
+		return false;
+	}
+	OutParticipantName = InKeyArray.Pop();
+	OutSequenceNumber = FCString::Atoi(*InKeyArray.Pop());
+	OutIdentifier = FString::Join(InKeyArray, TEXT("_"));
+	return true;
+}
+
+
+FString FDlgGraphNode_Details::ComposeDialogueStringTableKey(const FString& Identifier, int32 SequenceNumber, const FString& ParticipantName) const
+{
+	TArray<FString> StringTableKeyArray;
+	if (!Identifier.IsEmpty())
+	{
+		StringTableKeyArray.Add(Identifier);
+	}
+	if (SequenceNumber >= 0)
+	{
+		StringTableKeyArray.Add(FString::FromInt(SequenceNumber));
+	}
+	if (!ParticipantName.IsEmpty())
+	{
+		StringTableKeyArray.Add(ParticipantName);
+	}
+
+	return FString::Join(StringTableKeyArray, TEXT("_"));
+}
+
+
+FGameplayTag FDlgGraphNode_Details::CreateSpeakerTagFromName(const FString& ParticipantName) const
+{
+	// Create gameplay tag array containing all possible participant tags
+	const FGameplayTagContainer& DialogueCategories = UGameplayTagsManager::Get().RequestGameplayTagChildren(TAG_Dlg);
+	FGameplayTagContainer DialogueParticipants;
+	for (const FGameplayTag& ParticipantCategory : DialogueCategories)
+	{
+		DialogueParticipants.AppendTags(UGameplayTagsManager::Get().RequestGameplayTagChildren(ParticipantCategory));
+	}
+	TArray<FGameplayTag> DialogueParticipantTagArray = DialogueParticipants.GetGameplayTagArray();
+
+	// Early return if array is empty
+	if (DialogueParticipantTagArray.IsEmpty())
+	{
+		return FGameplayTag::EmptyTag;
+	}
+
+	// Sort the array according to string similarity with the participant name
+	DialogueParticipantTagArray.Sort([&](const FGameplayTag& TagA, const FGameplayTag& TagB)
+		{
+			FString TagALeaf = TagA.ToString();
+			TagALeaf.RemoveFromStart(TagA.RequestDirectParent().ToString());
+			FString TagBLeaf = TagB.ToString();
+			TagBLeaf.RemoveFromStart(TagB.RequestDirectParent().ToString());
+			return CalculateLevenshteinDistance(TagALeaf, ParticipantName) < CalculateLevenshteinDistance(TagBLeaf, ParticipantName);
+		});
+
+	// Return the most similar tag
+	return DialogueParticipantTagArray[0];
+}
+
+
+int32 FDlgGraphNode_Details::CalculateLevenshteinDistance(const FString& FromString, const FString& ToString) const
+{
+	// Create a distance matrix containing the distances of the strings from each other
+	const int32 FromSize = FromString.Len();
+	const int32 ToSize = ToString.Len();
+	TArray<TArray<int32>> DistanceMatrix;
+	for (int32 i = 0; i <= FromSize; ++i)
+	{
+		DistanceMatrix.Add(TArray<int32>());
+		for (int32 j = 0; j <= ToSize; ++j)
+		{
+			DistanceMatrix[i].Add(0);
+		}
+	}
+
+	// If one of the words has zero length, the distance is equal to the size of the other word.
+	if (FromSize == 0)
+	{
+		return ToSize;
+	}
+	if (ToSize == 0)
+	{
+		return FromSize;
+	}
+
+	// Sets the first row and the first column of the distance matrix with the numerical order from 0 to the length of each word.
+	for (int32 i = 0; i <= FromSize; ++i)
+	{
+		DistanceMatrix[i][0] = i;
+	}
+	for (int32 j = 0; j <= ToSize; ++j)
+	{
+		DistanceMatrix[0][j] = j;
+	}
+
+	// Verification step / matrix filling.
+	for (int32 i = 1; i <= FromSize; ++i)
+	{
+		for (int32 j = 1; j <= ToSize; ++j)
+		{
+			// Sets the modification cost.
+			// 0 means no modification (i.e. equal letters) and 1 means that a modification is needed (i.e. unequal letters).
+			int32 cost = (ToString[j - 1] == FromString[i - 1]) ? 0 : 1;
+
+			// Sets the current position of the matrix as the minimum value between a (deletion), b (insertion) and c (substitution).
+			// a = the upper adjacent value plus 1: verif[i - 1][j] + 1
+			// b = the left adjacent value plus 1: verif[i][j - 1] + 1
+			// c = the upper left adjacent value plus the modification cost: verif[i - 1][j - 1] + cost
+			DistanceMatrix[i][j] = FMath::Min(
+				FMath::Min(DistanceMatrix[i - 1][j] + 1, DistanceMatrix[i][j - 1] + 1),
+				DistanceMatrix[i - 1][j - 1] + cost
+			);
+		}
+	}
+
+	// The last position of the matrix will contain the Levenshtein distance.
+	return DistanceMatrix[FromSize][ToSize];
+}
+
+
 void FDlgGraphNode_Details::OnIsVirtualParentChanged()
 {
 	DetailLayoutBuilder->ForceRefreshDetails();
+}
+
+
+FReply FDlgGraphNode_Details::OnGenerateSpeechSequenceButtonClicked()
+{
+	// Validate input
+	if (!StringTableSource)
+	{
+		UE_LOG(LogTemp, Error, TEXT("FDlgGraphNode_Details::OnGenerateSpeechSequenceButtonClicked: No string table given!"));
+		return FReply::Unhandled();
+	}
+	const FStringTable& StringTableStruct = StringTableSource->GetStringTable().Get();
+
+	if (!StringTableStruct.FindEntry(FTextKey(FromStringTableLineID.ToString())))
+	{
+		UE_LOG(LogTemp, Error, TEXT("FDlgGraphNode_Details::OnGenerateSpeechSequenceButtonClicked: %s not found in string table %s!"), *FromStringTableLineID.ToString(), *StringTableSource->GetName());
+		return FReply::Unhandled();
+	}
+
+	if (!StringTableStruct.FindEntry(FTextKey(ToStringTableLineID.ToString())))
+	{
+		UE_LOG(LogTemp, Error, TEXT("FDlgGraphNode_Details::OnGenerateSpeechSequenceButtonClicked: %s not found in string table %s!"), *ToStringTableLineID.ToString(), *StringTableSource->GetName());
+		return FReply::Unhandled();
+	}
+
+	int32 FromSequenceNumber;
+	int32 ToSequenceNumber;
+	FString DialogueIdentifier;
+	FString OtherDialogueIdentier;
+	FString DummyParticipant;
+	if (!ParseDialogueStringTableKey(FromStringTableLineID.ToString(), DialogueIdentifier, FromSequenceNumber, DummyParticipant))
+	{
+		UE_LOG(LogTemp, Error, TEXT("FDlgGraphNode_Details::OnGenerateSpeechSequenceButtonClicked: %s does not have the expected 'DialogueID_SequenceNumber_Participant' format!"), *FromStringTableLineID.ToString());
+		return FReply::Unhandled();
+	}
+	if (!ParseDialogueStringTableKey(ToStringTableLineID.ToString(), OtherDialogueIdentier, ToSequenceNumber, DummyParticipant))
+	{
+		UE_LOG(LogTemp, Error, TEXT("FDlgGraphNode_Details::OnGenerateSpeechSequenceButtonClicked: %s does not have the expected 'DialogueID_SequenceNumber_Participant' format!"), *ToStringTableLineID.ToString());
+		return FReply::Unhandled();
+	}
+
+	if (DialogueIdentifier != OtherDialogueIdentier)
+	{
+		UE_LOG(LogTemp, Error, TEXT("FDlgGraphNode_Details::OnGenerateSpeechSequenceButtonClicked: first DialogueID %s does not match last DialogueID %s!"), *DialogueIdentifier, *OtherDialogueIdentier);
+		return FReply::Unhandled();
+	}
+	if (FromSequenceNumber > ToSequenceNumber)
+	{
+		UE_LOG(LogTemp, Error, TEXT("FDlgGraphNode_Details::OnGenerateSpeechSequenceButtonClicked: first SequenceNumber %i needs to be lower or equal to last SequenceNumber %i!"), FromSequenceNumber, ToSequenceNumber);
+		return FReply::Unhandled();
+	}
+
+	// Clear existing dialogue speech
+	const TSharedPtr<IPropertyHandle> PropertyDialogueNode = DetailLayoutBuilder->GetProperty(UDialogueGraphNode::GetMemberNameDialogueNode(), UDialogueGraphNode::StaticClass());
+	TSharedPtr<IPropertyHandle> SpeechSequenceProperty = PropertyDialogueNode->GetChildHandle(UDlgNode_SpeechSequence::GetMemberNameSpeechSequence());
+	TSharedPtr<IPropertyHandleArray> SpeechSequencePropertyArray = SpeechSequenceProperty->AsArray();
+	SpeechSequencePropertyArray->EmptyArray();
+
+	// Populate the array with data from the string table
+	TArray<FString> Keys;
+	TArray<FString> ParticipantNames;
+	for (int32 i = FromSequenceNumber, i_max = ToSequenceNumber + 1; i < i_max; ++i)
+	{
+		StringTableStruct.EnumerateKeysAndSourceStrings([&](const FTextKey& Key, const FString& SourceString)
+			{
+				FString KeyString = FString(Key.GetChars());
+				FString KeyIdentifier;
+				FString ParticipantName;
+				int32 SequenceNumber;
+				if (ParseDialogueStringTableKey(KeyString, KeyIdentifier, SequenceNumber, ParticipantName))
+				{
+					if (KeyIdentifier == DialogueIdentifier && SequenceNumber == i)
+					{
+						Keys.Add(KeyString);
+						ParticipantNames.Add(ParticipantName);
+					}
+					return true;
+				}
+				return false;
+			});
+	}
+
+	TMap<FString, FGameplayTag> ParticipantNameTagMap;
+	for (int32 i = 0, i_max = Keys.Num(); i < i_max; ++i)
+	{
+		// Get properties from generated arrays
+		FString Key = Keys[i];
+		FString ParticipantName = ParticipantNames[i];
+
+		// Use existing tag if one is already found for the participant
+		FGameplayTag SpeakerTag = ParticipantNameTagMap.Contains(ParticipantName) ? ParticipantNameTagMap.FindRef(ParticipantName) : CreateSpeakerTagFromName(ParticipantName);
+
+		// Add a speech sequence property to the details panel array
+		SpeechSequencePropertyArray->AddItem();
+		TSharedRef<IPropertyHandle> SpeechSequencePropertyEntry = SpeechSequencePropertyArray->GetElement(i);
+
+		// Fill in the properties
+		SpeechSequencePropertyEntry->GetChildHandle(FDlgSpeechSequenceEntry::GetMemberNameText())->SetValue(FText::FromStringTable(StringTableSource->GetStringTableId(), Key));
+		if (SpeakerTag.IsValid())
+		{
+			// Cache valid speaker tag
+			ParticipantNameTagMap.Add(ParticipantName, SpeakerTag);
+
+			// Set tag property
+			TArray<void*> RawDataPtrs;
+			SpeechSequencePropertyEntry->GetChildHandle(FDlgSpeechSequenceEntry::GetMemberNameSpeakerTag())->AccessRawData(RawDataPtrs);
+			for (void* RawPtr : RawDataPtrs)
+			{
+				static_cast<FGameplayTag*>(RawPtr)->FromExportString(SpeakerTag.ToString());
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("FDlgGraphNode_Details::OnGenerateSpeechSequenceButtonClicked: Can't parse a ParticipantTag from SpeakerName %s!"), *ParticipantName);
+		}
+	}
+
+	return FReply::Handled();
 }
 
 //////////////////////////////////////////////////////////////////////////

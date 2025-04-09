@@ -34,6 +34,7 @@ public:
 	// Helper functions to get the names of some properties. Used by the DlgSystemEditor module
 	static FName GetMemberNameText() { return GET_MEMBER_NAME_CHECKED(FDlgSpeechSequenceEntry, Text); }
 	static FName GetMemberNameTextArguments() { return GET_MEMBER_NAME_CHECKED(FDlgSpeechSequenceEntry, TextArguments); }
+	static FName GetMemberNameSpeakerTag() { return GET_MEMBER_NAME_CHECKED(FDlgSpeechSequenceEntry, SpeakerTag); }
 
 public:
 	// The Participant Name (speaker) associated with this speech entry.

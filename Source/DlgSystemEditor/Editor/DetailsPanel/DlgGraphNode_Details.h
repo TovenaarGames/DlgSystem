@@ -13,6 +13,8 @@ class FDlgObject_CustomRowHelper;
 class FDlgTextPropertyPickList_CustomRowHelper;
 class FDlgMultiLineEditableTextBox_CustomRowHelper;
 class FDlgIntTextBox_CustomRowHelper;
+class UStringTable;
+struct FAssetData;
 
 /**
  * How the details customization panel looks for UDialogueGraphNode object
@@ -65,8 +67,23 @@ private:
 		Dialogue->UpdateAndRefreshData();
 	}
 
+	/** Parse a dialogue string table key into different components.*/
+	bool ParseDialogueStringTableKey(const FString& InKey, FString& OutIdentifier, int32& OutSequenceNumber, FString& OutParticipantName) const;
+
+	/** Compose a dialogue string table key from different components. */
+	FString ComposeDialogueStringTableKey(const FString& Identifier, int32 SequenceNumber, const FString& ParticipantName) const;
+
+	/** Create a speaker tag from the parsed participant name in a string table. */
+	FGameplayTag CreateSpeakerTagFromName(const FString& ParticipantName) const;
+
+	/** Calculate the Levenshstein distance between two words. This is used to determine string similarity. Sourced from https://github.com/guilhermeagostinelli/levenshtein/blob/master/levenshtein.cpp */
+	int32 CalculateLevenshteinDistance(const FString& FromString, const FString& ToString) const;
+
 	// The IsVirtualParent property changed
 	void OnIsVirtualParentChanged();
+
+	// Called when clicking the generate speech sequence button
+	FReply OnGenerateSpeechSequenceButtonClicked();
 
 private:
 	/** Hold the reference to the Graph Node this represents */
@@ -95,4 +112,13 @@ private:
 
 	/** Hold a reference to dialogue we are displaying. */
 	UDlgDialogue* Dialogue = nullptr;
+
+	/** The string table from which a speech node sequence is generated. */
+	UStringTable* StringTableSource;
+
+	/** From what line we should parse our string table for speech node generation. */
+	FText FromStringTableLineID;
+
+	/** To what line we should parse our string table for speech node generation. */
+	FText ToStringTableLineID;
 };
