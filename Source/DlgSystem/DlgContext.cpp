@@ -969,9 +969,9 @@ bool UDlgContext::ValidateParticipantsMapForDialogue(
 		if (bLog)
 		{
 			TArray<FString> ParticipantsMissing;
-			for (const FName& Name : ParticipantsRequiredSet)
+			for (const FGameplayTag& Tag: ParticipantsRequiredSet)
 			{
-				ParticipantsMissing.Add(Name.ToString());
+				ParticipantsMissing.Add(Tag.ToString());
 			}
 
 			const FString NameList = FString::Join(ParticipantsMissing, TEXT(", "));
