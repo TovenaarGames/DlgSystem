@@ -542,7 +542,7 @@ FReply FDlgGraphNode_Details::OnGenerateSpeechSequenceButtonClicked()
 	{
 		StringTableStruct.EnumerateKeysAndSourceStrings([&](const FTextKey& Key, const FString& SourceString)
 			{
-				FString KeyString = FString(Key.GetChars());
+				FString KeyString = Key.ToString();
 				FString KeyIdentifier;
 				FString ParticipantName;
 				int32 SequenceNumber;
