@@ -594,6 +594,17 @@ FReply FDlgGraphNode_Details::OnGenerateSpeechSequenceButtonClicked()
 		}
 	}
 
+	// Set owner tag with first tag of dialogue
+	if (!ParticipantNameTagMap.IsEmpty() && !ParticipantNames.IsEmpty())
+	{
+		TArray<void*> RawDataPtrs;
+		PropertyDialogueNode->GetChildHandle(UDlgNode::GetMemberNameOwnerTag())->AccessRawData(RawDataPtrs);
+		for (void* RawPtr : RawDataPtrs)
+		{
+			static_cast<FGameplayTag*>(RawPtr)->FromExportString(ParticipantNameTagMap.FindRef(ParticipantNames[0]).ToString());
+		}
+	}
+
 	return FReply::Handled();
 }
 
