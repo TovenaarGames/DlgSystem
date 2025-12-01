@@ -88,8 +88,8 @@ EDataValidationResult UDlgNode_Speech::IsDataValid(FDataValidationContext& Conte
 
 bool UDlgNode_Speech::HandleNodeEnter(UDlgContext& Context, bool bFireThisNodeEnterEvents, TSet<const UDlgNode*> NodesEnteredWithThisStep)
 {
-	RebuildConstructedText(Context);
 	const bool bResult = Super::HandleNodeEnter(Context, bFireThisNodeEnterEvents, NodesEnteredWithThisStep);
+	RebuildConstructedText(Context);
 
 	// Handle virtual parent enter events for direct children
 	if (bResult && bIsVirtualParent && Context.IsValidNodeIndex(VirtualParentFirstSatisfiedDirectChildIndex))
