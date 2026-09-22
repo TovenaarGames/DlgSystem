@@ -423,7 +423,15 @@ void UDlgDialogue::CompileDialogueNodesFromGraphNodes()
 	FDlgLogger::Get().Infof(TEXT("Compiling Dialogue = `%s` (Graph data -> Dialogue data)`"), *GetPathName());
 	GetDialogueEditorAccess()->CompileDialogueNodesFromGraphNodes(this);
 }
+
 #endif // #if WITH_EDITOR
+
+
+bool UDlgDialogue::HasParticipant(FGameplayTag ParticipantTag) const
+{
+	return ParticipantsData.Contains(ParticipantTag);
+}
+
 
 void UDlgDialogue::ImportFromFile()
 {
