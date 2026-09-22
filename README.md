@@ -13,7 +13,7 @@
 		- [Code Style](#code-style)
 		- [Commit messages](#commit-messages)
 
-Supported unreal versions: `5.5`, `5.6`, `5.7`
+Supported Unreal versions: `5.6`, `5.7`, `5.8`
 
 ## Features
 
@@ -28,7 +28,7 @@ Supported unreal versions: `5.5`, `5.6`, `5.7`
     - Dialogue Browser to get a good overview of all the dialogues
     - Customized blueprint nodes to handle certain events and conditions in Blueprint easily
     - Settings panel in Project Settings to modify the layout
-    - Option to import from and export to plain text formats (e.g. json)
+    - Option to import from and export to plain text formats (e.g. JSON)
     - Real time display/edit functionality of the Dialogue runtime data.
 
 **Not yet convinced? Have you seen our [showcase page](https://github.com/NotYetGames/DlgSystem/wiki/Feature-Showcase)?**
@@ -51,12 +51,15 @@ Games that use this Plugin:
 * [Backbone](https://store.steampowered.com/app/865610/Backbone/) - Roleplaying detective adventure
 * [Revolution: Path of a Weaponsmith](https://store.steampowered.com/app/1295560/Revolution_Path_of_a_Weaponsmith/) - Third person stealth shooter
 * [The Ascent](https://store.steampowered.com/app/979690/The_Ascent/) - Cyberpunk Action-shooter RPG
+* [Echoes of the End](https://store.steampowered.com/app/2821610/Echoes_of_the_End_Enhanced_Edition/) - Third-person fantasy action-adventure game set in a unique world inspired by the raw landscapes of Iceland
+
+And hundreds of other games that decided to remain anonymous!
 
 Want to have your game showcased here? Contact us!
 
 ## General Information
 
-This plugin is primary developed and used for our own [game (WarriOrb)](http://www.warriorb.com).
+This plugin is primarily developed and used for our own [game (WarriOrb)](http://www.warriorb.com).
 We have put significant effort into it and decided to make it open source in order to help out other teams facing similar challenges.
 
 Contribution, feedback and constructive criticism are appreciated and we would be really happy to hear about your game using our tool.
@@ -67,7 +70,7 @@ Contribution, feedback and constructive criticism are appreciated and we would b
 
 ### Buy
 
-You can **buy** [this plugin](https://bit.ly/DlgMarketplace) or our other plugins on the [unreal engine marketplace](https://www.unrealengine.com/marketplace/en-US/profile/Not+Yet) and always get binary support for the latest 3 engine versions.
+You can **buy** [this plugin](https://bit.ly/DlgMarketplace) or our other plugins on the [Unreal Engine Marketplace](https://www.unrealengine.com/marketplace/en-US/profile/Not+Yet) and always get binary support for the latest 3 engine versions.
 
 ### Spread the word
 
@@ -77,7 +80,7 @@ Should it prove useful to you, the best way to say thanks is to mention us and o
 
 ### Branches
 
-The supported unreal versions have their own branches.
+The supported Unreal versions have their own branches.
 The outdated version branches are kept but not updated anymore.
 
 ### Code Style

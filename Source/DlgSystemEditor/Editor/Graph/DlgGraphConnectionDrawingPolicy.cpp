@@ -2,10 +2,36 @@
 #include "DlgGraphConnectionDrawingPolicy.h"
 
 #include "Rendering/DrawElements.h"
+#include "Brushes/SlateRoundedBoxBrush.h"
+#include "Styling/StyleColors.h"
 
+#include "DlgSystemEditor/Editor/Graph/DialogueGraphSchema.h"
 #include "DlgSystemEditor/Editor/Nodes/DialogueGraphNode.h"
 #include "DlgSystemEditor/Editor/Nodes/DialogueGraphNode_Edge.h"
 #include "DlgSystemEditor/Editor/Nodes/SDlgGraphNode_Edge.h"
+
+namespace
+{
+// Before UE 5.6, several Graph/Slate helper APIs still use FVector2D, while
+// this file uses FNYVector2f as a compatibility alias that becomes FVector2D
+// on older engines and FVector2f on newer ones.
+//
+// Keep conversions explicit at those engine API boundaries instead of relying
+// on implicit float/double vector conversions. ToSlateVector2D() is used when
+// calling Slate/Graph helpers, and ToDlgVector2() converts returned values back
+// into the plugin's cross-version vector type.
+template <typename VectorType>
+FVector2D ToSlateVector2D(const VectorType& Vector)
+{
+	return FVector2D(Vector.X, Vector.Y);
+}
+
+template <typename VectorType>
+FNYVector2f ToDlgVector2(const VectorType& Vector)
+{
+	return FNYVector2f(Vector.X, Vector.Y);
+}
+} // namespace
 
 /////////////////////////////////////////////////////
 // FDlgGraphConnectionDrawingPolicy
@@ -19,6 +45,17 @@ FDlgGraphConnectionDrawingPolicy::FDlgGraphConnectionDrawingPolicy(
 ) : Super(InBackLayerID, InFrontLayerID, ZoomFactor, InClippingRect, InDrawElements),
 	Graph(InGraphObj), DialogueSettings(GetDefault<UDlgSystemSettings>())
 {
+}
+
+// UE 5.8 renamed LocalMousePosition to AbsoluteMousePosition because SetMousePosition
+// was already passed an absolute position from AllottedGeometry.LocalToAbsolute().
+FNYVector2f FDlgGraphConnectionDrawingPolicy::GetMousePosition() const
+{
+#if NY_ENGINE_VERSION >= 508
+	return FNYVector2f(AbsoluteMousePosition.X, AbsoluteMousePosition.Y);
+#else
+	return FNYVector2f(LocalMousePosition.X, LocalMousePosition.Y);
+#endif
 }
 
 void FDlgGraphConnectionDrawingPolicy::DetermineWiringStyle(UEdGraphPin* OutputPin, UEdGraphPin* InputPin,
@@ -129,6 +166,7 @@ void FDlgGraphConnectionDrawingPolicy::DrawConnection(
 	{
 		// Distance to consider as an overlap
 		const float QueryDistanceTriggerThresholdSquared = FMath::Square(Settings->SplineHoverTolerance + Params.WireThickness * 0.5f);
+		const FNYVector2f MousePosition = GetMousePosition();
 
 #if NY_ENGINE_VERSION >= 500
 		// Distance to pass the bounding box cull test. This is used for the bCloseToSpline output that can be used as a
@@ -152,9 +190,9 @@ void FDlgGraphConnectionDrawingPolicy::DrawConnection(
 			Bounds += FNYVector2f(P1 - MaximumTangentContribution * P1Tangent);
 
 #if NY_ENGINE_VERSION >= 500
-			bCloseToSpline = Bounds.ComputeSquaredDistanceToPoint(LocalMousePosition) < QueryDistanceForCloseSquared;
+			bCloseToSpline = Bounds.ComputeSquaredDistanceToPoint(MousePosition) < QueryDistanceForCloseSquared;
 #else
-			bCloseToSpline = Bounds.ComputeSquaredDistanceToPoint(LocalMousePosition) < QueryDistanceToBoundingBoxSquared;
+			bCloseToSpline = Bounds.ComputeSquaredDistanceToPoint(MousePosition) < QueryDistanceToBoundingBoxSquared;
 #endif
 		}
 
@@ -171,9 +209,8 @@ void FDlgGraphConnectionDrawingPolicy::DrawConnection(
 			{
 				const FNYVector2f Point2 = FMath::CubicInterp(P0, P0Tangent, P1, P1Tangent, TestAlpha + StepInterval);
 
-				const FNYVector2f LocalMousePosition2D(LocalMousePosition.X, LocalMousePosition.Y);
-				const FNYVector2f ClosestPointToSegment = FMath::ClosestPointOnSegment2D(LocalMousePosition2D, Point1, Point2);
-				const float DistanceSquared = (LocalMousePosition2D - ClosestPointToSegment).SizeSquared();
+				const FNYVector2f ClosestPointToSegment = FMath::ClosestPointOnSegment2D(MousePosition, Point1, Point2);
+				const float DistanceSquared = (MousePosition - ClosestPointToSegment).SizeSquared();
 
 				if (DistanceSquared < ClosestDistanceSquared)
 				{
@@ -315,6 +352,21 @@ void FDlgGraphConnectionDrawingPolicy::DrawPreviewConnector(
 	UEdGraphPin* Pin
 )
 {
+#if NY_ENGINE_VERSION >= 502
+	// When relinking the tail (start/parent) of an edge, the engine always passes the parent's
+	// output pin geometry as the start point. But we want the wire to originate from the child node
+	// instead. Since DrawPreviewConnector is called before Draw(), we don't have access to
+	// ArrangedNodes yet to look up the child node's geometry.
+	// Solution: defer the preview wire drawing to Draw() where we can look up the child node.
+	if (!RelinkConnections.IsEmpty() && UDialogueGraphSchema::bRelinkingTail)
+	{
+		bDeferredTailRelinkPreview = true;
+		DeferredPreviewEndpoint = EndPoint; // Mouse cursor position (absolute space)
+		DeferredPreviewPin = Pin;
+		return;
+	}
+#endif // NY_ENGINE_VERSION >= 502
+
 	FConnectionParams Params;
 	DetermineWiringStyle(Pin, nullptr, /*inout*/ Params);
 
@@ -322,12 +374,12 @@ void FDlgGraphConnectionDrawingPolicy::DrawPreviewConnector(
 	if (Pin->Direction == EGPD_Output)
 	{
 		// From output pin, closest point on the SourceGeometry (source node) that goes to the EndPoint (destination node)
-		DrawSplineWithArrow(FGeometryHelper::FindClosestPointOnGeom(PinGeometry, EndPoint), EndPoint, Params);
+		DrawSplineWithArrow(ToDlgVector2(FGeometryHelper::FindClosestPointOnGeom(PinGeometry, ToSlateVector2D(EndPoint))), EndPoint, Params);
 	}
 	else
 	{
 		// From input pin, should never happen
-		DrawSplineWithArrow(FGeometryHelper::FindClosestPointOnGeom(PinGeometry, StartPoint), StartPoint, Params);
+		DrawSplineWithArrow(ToDlgVector2(FGeometryHelper::FindClosestPointOnGeom(PinGeometry, ToSlateVector2D(StartPoint))), StartPoint, Params);
 	}
 }
 
@@ -351,8 +403,45 @@ void FDlgGraphConnectionDrawingPolicy::Draw(TMap<TSharedRef<SWidget>, FArrangedW
 		NodeWidgetMap.Add(ChildNode->GetNodeObj(), NodeIndex);
 	}
 
-	// Now draw
+	// Now draw all regular connections
 	Super::Draw(InPinGeometries, ArrangedNodes);
+
+#if NY_ENGINE_VERSION >= 502
+	// Draw deferred tail-relink preview wire.
+	// When the user drags the start (tail) of an arrow, the engine's preview connector would
+	// draw from the parent node to the cursor. We suppress that in DrawPreviewConnector and
+	// draw here instead, from the child node to the cursor — which is the correct direction.
+	if (bDeferredTailRelinkPreview && RelinkConnections.Num() > 0)
+	{
+		bDeferredTailRelinkPreview = false;
+
+		// RelinkConnections[0].TargetPin is the child node's input pin (set by our SplineOverlapResult remapping)
+		UEdGraphPin* ChildInputPin = RelinkConnections[0].TargetPin;
+		if (ChildInputPin)
+		{
+			UDialogueGraphNode* ChildNode = Cast<UDialogueGraphNode>(ChildInputPin->GetOwningNode());
+			if (ChildNode)
+			{
+				const int32* ChildNodeIndex = NodeWidgetMap.Find(ChildNode);
+				if (ChildNodeIndex)
+				{
+					const FGeometry& ChildGeom = ArrangedNodes[*ChildNodeIndex].Geometry;
+
+					// Draw from the closest point on the child node toward the mouse cursor
+					const FNYVector2f ChildAnchor = ToDlgVector2(FGeometryHelper::FindClosestPointOnGeom(ChildGeom, ToSlateVector2D(DeferredPreviewEndpoint)));
+
+					FConnectionParams Params;
+					DetermineWiringStyle(DeferredPreviewPin, nullptr, Params);
+
+					// Draw the arrow pointing from cursor to child (the new parent will be at cursor end)
+					Internal_DrawLineWithArrow(DeferredPreviewEndpoint, ChildAnchor, Params);
+				}
+			}
+		}
+
+		DeferredPreviewPin = nullptr;
+	}
+#endif // NY_ENGINE_VERSION >= 502
 }
 
 void FDlgGraphConnectionDrawingPolicy::Internal_DrawLineWithArrow(
@@ -371,16 +460,107 @@ void FDlgGraphConnectionDrawingPolicy::Internal_DrawLineWithArrow(
 	const FNYVector2f LengthBias = ArrowRadius.X * UnitDelta;
 	const FNYVector2f StartPoint = StartAnchorPoint + DirectionBias + LengthBias;
 	const FNYVector2f EndPoint = EndAnchorPoint + DirectionBias - LengthBias;
+	FLinearColor ArrowHeadColor = Params.WireColor;
 
+	const FNYVector2f ArrowDrawPos = EndPoint - ToDlgVector2(ArrowRadius);
+	const float AngleInRadians = FMath::Atan2(DeltaPos.Y, DeltaPos.X);
+
+#if NY_ENGINE_VERSION >= 502
+	// Draw a line/spline (shorten slightly so it doesn't overlap with the arrowhead when semi-transparent)
+	DrawConnection(WireLayerID, StartPoint, EndPoint - (LengthBias * 0.8f), Params);
+
+	// Detect mouse hover on arrow endpoints for relink grab handles
+	const FNYVector2f StartHandlePoint = StartPoint + (LengthBias * 0.8f);
+	const FVector2D StartHandlePoint2D = ToSlateVector2D(StartHandlePoint);
+	const FVector2D EndPoint2D = ToSlateVector2D(EndPoint);
+	const FVector2D MousePosition2D = ToSlateVector2D(GetMousePosition());
+
+	bool bStartHovered = false;
+	bool bEndHovered = false;
+	const FVector2D ClosestPoint = FMath::ClosestPointOnSegment2D(MousePosition2D, StartHandlePoint2D, EndPoint2D);
+	if ((ClosestPoint - MousePosition2D).Length() < RelinkHandleHoverRadius * ZoomFactor)
+	{
+		bStartHovered = (StartHandlePoint2D - MousePosition2D).Length() < RelinkHandleHoverRadius * ZoomFactor;
+		bEndHovered = (EndPoint2D - MousePosition2D).Length() < RelinkHandleHoverRadius * ZoomFactor;
+
+		// Set the spline overlap result so SGraphPanel can initiate a relink drag
+		// We must remap edge node pins to the parent/child node pins since those have actual SGraphPin widgets
+		const float SquaredDistToPin1 = (Params.AssociatedPin1 != nullptr) ? (ToSlateVector2D(StartPoint) - MousePosition2D).SizeSquared() : FLT_MAX;
+		const float SquaredDistToPin2 = (Params.AssociatedPin2 != nullptr) ? (EndPoint2D - MousePosition2D).SizeSquared() : FLT_MAX;
+		UEdGraphPin* Pin1 = Params.AssociatedPin1; // output pin of parent node
+		UEdGraphPin* Pin2 = Params.AssociatedPin2; // input pin of edge node
+
+		// Forward edge node pins to the actual destination (child) node's input pin
+		// Only the parent/child nodes have SGraphPin widgets, the edge node does not
+		if (Pin2)
+		{
+			if (UDialogueGraphNode_Edge* EdgeNode = Cast<UDialogueGraphNode_Edge>(Pin2->GetOwningNode()))
+			{
+				if (EdgeNode->HasChildNode())
+				{
+					Pin2 = EdgeNode->GetChildNode()->GetInputPin();
+				}
+			}
+		}
+
+		if (bStartHovered)
+		{
+			// Hovering near the start (tail) of the arrow.
+			// Pin1 must be the parent node's output pin because it has an SGraphPin widget.
+			// SGraphPanel::OnMouseButtonDown uses GetPin1Handle() to find the pin widget to start the drag.
+			SplineOverlapResult = FGraphSplineOverlapResult(Pin1, Pin2, FMath::Min(SquaredDistToPin1, SquaredDistToPin2), 0.0f, FLT_MAX, true);
+
+			// Tell the schema that if a relink happens, we're moving the tail (parent) end.
+			UDialogueGraphSchema::bRelinkingTail = true;
+			UDialogueGraphSchema::RelinkOldChildPin = Pin2;
+		}
+		else if (bEndHovered)
+		{
+			// Hovering near the end (head) of the arrow.
+			SplineOverlapResult = FGraphSplineOverlapResult(Pin1, Pin2, FMath::Min(SquaredDistToPin1, SquaredDistToPin2), FLT_MAX, 0.0f, true);
+
+			// Tell the schema that if a relink happens, we're moving the head (child) end.
+			UDialogueGraphSchema::bRelinkingTail = false;
+			UDialogueGraphSchema::RelinkOldChildPin = nullptr;
+		}
+
+		// Draw orange grab handle circles only when not actively relinking
+		if (RelinkConnections.IsEmpty())
+		{
+			if (bStartHovered)
+			{
+				static FSlateRoundedBoxBrush RoundedBoxBrush = FSlateRoundedBoxBrush(FStyleColors::Foreground, ArrowImage->ImageSize.X * 0.5f);
+
+				FSlateDrawElement::MakeBox(DrawElementsList,
+					ArrowLayerID - 1,
+					FPaintGeometry(ToSlateVector2D(StartHandlePoint) - ArrowRadius, ArrowImage->ImageSize * ZoomFactor, ZoomFactor),
+					&RoundedBoxBrush,
+					ESlateDrawEffect::None,
+					FStyleColors::AccentOrange.GetSpecifiedColor());
+			}
+			else if (bEndHovered)
+			{
+				static FSlateRoundedBoxBrush RoundedBoxBrush = FSlateRoundedBoxBrush(FStyleColors::Foreground, ArrowImage->ImageSize.X * 0.5f);
+
+				FSlateDrawElement::MakeBox(DrawElementsList,
+					ArrowLayerID - 1,
+					FPaintGeometry(EndPoint2D - ArrowRadius - ToSlateVector2D(LengthBias * 0.2f), ArrowImage->ImageSize * ZoomFactor, ZoomFactor),
+					&RoundedBoxBrush,
+					ESlateDrawEffect::None,
+					FStyleColors::AccentOrange.GetSpecifiedColor());
+
+				ArrowHeadColor = FLinearColor::Black;
+			}
+		}
+	}
+#else
 	// Draw a line/spline
 	DrawConnection(WireLayerID, StartPoint, EndPoint, Params);
+#endif // NY_ENGINE_VERSION >= 502
 
 	// Draw the arrow
 	if (ArrowImage)
 	{
-		const FNYVector2f ArrowDrawPos = EndPoint - ArrowRadius;
-		const float AngleInRadians = FMath::Atan2(DeltaPos.Y, DeltaPos.X);
-
 		FSlateDrawElement::MakeRotatedBox(
 			DrawElementsList,
 			ArrowLayerID,
@@ -390,7 +570,7 @@ void FDlgGraphConnectionDrawingPolicy::Internal_DrawLineWithArrow(
 			AngleInRadians,
 			TOptional<FNYVector2f>(),
 			FSlateDrawElement::RelativeToElement,
-			Params.WireColor
+			ArrowHeadColor
 		);
 	}
 }

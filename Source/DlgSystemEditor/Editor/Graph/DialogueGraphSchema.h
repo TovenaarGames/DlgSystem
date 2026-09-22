@@ -33,7 +33,7 @@ public:
 
 	//~ Begin EdGraphSchema Interface
 	/**
-	 * Get all actions that can be performed when right clicking on a graph or drag-releasing on a graph from a pin
+	 * Get all actions that can be performed when right-clicking on a graph or drag-releasing on a graph from a pin
 	 *
 	 * @param [in,out]	ContextMenuBuilder	The context (graph, dragged pin, etc...) and output menu builder.
 	 */
@@ -173,6 +173,12 @@ public:
 	}
 	//~ End EdGraphSchema Interface
 
+#if NY_ENGINE_VERSION >= 502
+	virtual bool TryRelinkConnectionTarget(UEdGraphPin* SourcePin, UEdGraphPin* OldTargetPin, UEdGraphPin* NewTargetPin, const TArray<UEdGraphNode*>& InSelectedGraphNodes) const override;
+	virtual bool IsConnectionRelinkingAllowed(UEdGraphPin* InPin) const override;
+	virtual const FPinConnectionResponse CanRelinkConnectionToPin(const UEdGraphPin* OldSourcePin, const UEdGraphPin* TargetPinCandidate) const override;
+#endif // NY_ENGINE_VERSION >= 502
+
 	// Begin own functions
 	/**
 	 * Breaks all links from/to a single pin
@@ -213,4 +219,22 @@ private:
 
 	/** Whether the list of UDlgNode classes has been populated */
 	static bool bDialogueNodeClassesInitialized;
+
+#if NY_ENGINE_VERSION >= 502
+public:
+	/**
+	 * Flag set by the drawing policy to indicate which end of the edge is being relinked.
+	 * true = relinking the tail (start/parent), false = relinking the head (end/child).
+	 * This is needed because FDragConnection always reports the same SourcePin/TargetPin regardless
+	 * of which end was dragged (only output pins have widgets in DlgSystem).
+	 */
+	static bool bRelinkingTail;
+
+	/**
+	 * The child node's input pin from the connection being relinked, set by the drawing policy.
+	 * Needed by CanRelinkConnectionToPin to validate the correct pair of nodes when relinking
+	 * the tail end (since the engine only passes the old source pin, not the old target pin).
+	 */
+	static UEdGraphPin* RelinkOldChildPin;
+#endif
 };

@@ -33,6 +33,11 @@ const FText UDialogueGraphSchema::NODE_CATEGORY_Convert(LOCTEXT("NodesConvertAct
 TArray<TSubclassOf<UDlgNode>> UDialogueGraphSchema::DialogueNodeClasses;
 bool UDialogueGraphSchema::bDialogueNodeClassesInitialized = false;
 
+#if NY_ENGINE_VERSION >= 502
+bool UDialogueGraphSchema::bRelinkingTail = false;
+UEdGraphPin* UDialogueGraphSchema::RelinkOldChildPin = nullptr;
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // UDialogueGraphSchema
 void UDialogueGraphSchema::GetPaletteActions(FGraphActionMenuBuilder& ActionMenuBuilder) const
@@ -75,7 +80,7 @@ void UDialogueGraphSchema::GetContextMenuActions(UToolMenu* Menu, UGraphNodeCont
 {
 	if (Context->Node && !Context->bIsDebugging)
 	{
-		// Menu for right clicking on node
+		// Menu for right-clicking on node
 		FToolMenuSection& Section = Menu->AddSection("DialogueGraphSchemaNodeActions", LOCTEXT("NodeActionsMenuHeader", "Node Actions"));
 
 		// This action is handled in UDialogueGraphSchema::BreakNodeLinks, and the action is registered in SGraphEditorImpl (not by us)
@@ -98,7 +103,7 @@ void UDialogueGraphSchema::GetContextMenuActions(
 {
 	if (InGraphNode && !bIsDebugging)
 	{
-		// Menu for right clicking on node
+		// Menu for right-clicking on node
 		MenuBuilder->BeginSection("DialogueGraphSchemaNodeActions", LOCTEXT("NodeActionsMenuHeader", "Node Actions"));
 		{
 			// This action is handled in UDialogueGraphSchema::BreakNodeLinks, and the action is registered in SGraphEditorImpl (not by us)
@@ -373,6 +378,175 @@ void UDialogueGraphSchema::DroppedAssetsOnNode(const TArray<FAssetData>& Assets,
 {
 
 }
+
+#if NY_ENGINE_VERSION >= 502
+
+
+bool UDialogueGraphSchema::TryRelinkConnectionTarget(UEdGraphPin* SourcePin, UEdGraphPin* OldTargetPin, UEdGraphPin* NewTargetPin, const TArray<UEdGraphNode*>& InSelectedGraphNodes) const
+{
+	// Reset relink state regardless of outcome — this is the terminal call in the relink flow.
+	const bool bWasRelinkingTail = bRelinkingTail;
+	bRelinkingTail = false;
+	RelinkOldChildPin = nullptr;
+
+	if (!SourcePin || !OldTargetPin || !NewTargetPin)
+	{
+		return false;
+	}
+
+	// FDragConnection always sets SourcePin = parent's output pin, OldTargetPin = child's input pin
+	// (because only the output pin has an SGraphPin widget in DaeSystem).
+	// NewTargetPin is the pin the user dropped onto.
+	//
+	// To determine which end of the edge is being moved:
+	// - If NewTargetPin is an INPUT pin: user is changing the child (dragged from arrow head / end)
+	// - If NewTargetPin is an OUTPUT pin: user is changing the parent (dragged from arrow tail / start)
+
+	// The drawing policy remaps edge pins to parent/child node pins, so SourcePin and OldTargetPin
+	// belong to UDialogueGraphNode (dialogue nodes), not to UDialogueGraphNode_Edge.
+	UDialogueGraphNode* OldParentNode = Cast<UDialogueGraphNode>(SourcePin->GetOwningNode());
+	UDialogueGraphNode* OldChildNode = Cast<UDialogueGraphNode>(OldTargetPin->GetOwningNode());
+	UDialogueGraphNode* NewTargetNode = Cast<UDialogueGraphNode>(NewTargetPin->GetOwningNode());
+
+	if (!OldParentNode || !OldChildNode || !NewTargetNode)
+	{
+		return false;
+	}
+
+	// bWasRelinkingTail was saved at the top of this function before resetting the static.
+	// true = dragged from the start of the arrow (changing the parent)
+	// false = dragged from the end of the arrow (changing the child)
+	const bool bRelinkingChild = !bWasRelinkingTail;
+
+	UDialogueGraphNode* NewParentNode = bRelinkingChild ? OldParentNode : NewTargetNode;
+	UDialogueGraphNode* NewChildNode = bRelinkingChild ? NewTargetNode : OldChildNode;
+
+	// Find the existing edge node between OldParentNode and OldChildNode
+	UDialogueGraphNode_Edge* OldEdgeNode = nullptr;
+	{
+		const TArray<UDialogueGraphNode_Edge*> ChildEdges = OldParentNode->GetChildEdgeNodes();
+		for (UDialogueGraphNode_Edge* ChildEdge : ChildEdges)
+		{
+			if (ChildEdge && ChildEdge->HasChildNode() && ChildEdge->GetChildNode() == OldChildNode)
+			{
+				OldEdgeNode = ChildEdge;
+				break;
+			}
+		}
+	}
+
+	if (!OldEdgeNode)
+	{
+		return false;
+	}
+
+	// Validate the new connection is allowed
+	if (NewParentNode == NewChildNode)
+	{
+		return false;
+	}
+	if (!NewParentNode->CanHaveOutputConnections())
+	{
+		return false;
+	}
+	if (!NewChildNode->CanHaveInputConnections())
+	{
+		return false;
+	}
+	if (NewParentNode->HasOutputConnectionToNode(NewChildNode))
+	{
+		return false;
+	}
+
+	// Start transaction for undo/redo
+	const FScopedTransaction Transaction(LOCTEXT("RelinkEdge", "Dialogue Editor: Relink Edge"));
+
+	UEdGraph* Graph = OldEdgeNode->GetGraph();
+	UDlgDialogue* Dialogue = FDlgEditorUtilities::GetDialogueForGraph(Graph);
+
+	// Mark everything for undo
+	Graph->Modify();
+	Dialogue->Modify();
+	OldParentNode->Modify();
+	OldChildNode->Modify();
+	NewParentNode->Modify();
+	NewChildNode->Modify();
+	OldEdgeNode->Modify();
+
+	// Save the edge data we want to preserve (conditions, text, speaker state, etc.)
+	FDlgEdge PreservedEdge = OldEdgeNode->GetDialogueEdge();
+
+	// Destroy the old edge by breaking its connections.
+	// PinConnectionListChanged on the edge node will handle removing the edge from
+	// the parent's Children array and destroying the edge node.
+	BreakSinglePinLink(OldEdgeNode->GetOutputPin(), OldEdgeNode->GetOutputPin()->LinkedTo[0]);
+
+	// Create a new edge node between the new parent and child
+	UDialogueGraphNode_Edge* NewEdgeNode =
+		FDlgEditorUtilities::SpawnGraphNodeFromTemplate<UDialogueGraphNode_Edge>(
+			Graph, NewParentNode->GetDefaultEdgePosition(), false
+		);
+	NewEdgeNode->CreateConnections(NewParentNode, NewChildNode);
+
+	// Restore preserved edge data with the correct new TargetIndex
+	const int32 NewTargetIndex = NewEdgeNode->GetDialogueEdge().TargetIndex;
+	PreservedEdge.TargetIndex = NewTargetIndex;
+	NewEdgeNode->SetDialogueEdge(PreservedEdge);
+	NewEdgeNode->PostEditChange();
+
+	// Recompile the dialogue - this reassigns all indices and validates the graph
+	Dialogue->CompileDialogueNodesFromGraphNodes();
+	Graph->NotifyGraphChanged();
+
+	return true;
+}
+
+bool UDialogueGraphSchema::IsConnectionRelinkingAllowed(UEdGraphPin* InPin) const
+{
+	if (InPin && InPin->GetOwningNode())
+	{
+		UDialogueGraphNode_Base* Node = Cast<UDialogueGraphNode_Base>(InPin->GetOwningNode());
+		if (Node)
+		{
+			// Allow relinking on edge nodes and dialogue nodes
+			if (Node->IsA(UDialogueGraphNode_Edge::StaticClass()) || Node->IsA(UDialogueGraphNode::StaticClass()))
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+const FPinConnectionResponse UDialogueGraphSchema::CanRelinkConnectionToPin(const UEdGraphPin* OldSourcePin, const UEdGraphPin* TargetPinCandidate) const
+{
+	// The engine always passes Pin1 (the old parent's output pin) as OldSourcePin, regardless of
+	// which end of the edge is being dragged. When relinking the tail (changing the parent), the
+	// actual new connection is TargetPinCandidate (new parent) -> old child, NOT OldSourcePin -> TargetPinCandidate.
+	// We need to validate the correct pair of nodes.
+	const UEdGraphPin* EffectiveSourcePin = OldSourcePin;
+	const UEdGraphPin* EffectiveTargetPin = TargetPinCandidate;
+
+	if (bRelinkingTail && RelinkOldChildPin)
+	{
+		// Relinking the tail: the new connection is TargetPinCandidate (new parent) -> RelinkOldChildPin (old child)
+		EffectiveSourcePin = TargetPinCandidate;
+		EffectiveTargetPin = RelinkOldChildPin;
+	}
+
+	FPinConnectionResponse Response = CanCreateConnection(EffectiveSourcePin, EffectiveTargetPin);
+	if (Response.Response != CONNECT_RESPONSE_DISALLOW)
+	{
+		Response.Message = LOCTEXT("RelinkEdgeMessage", "Relink edge");
+	}
+
+	return Response;
+}
+
+#endif
+
+
 // End EdGraphSchema Interface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

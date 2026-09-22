@@ -76,6 +76,7 @@ public:
 	// End of FConnectionDrawingPolicy interface
 
 protected:
+	FNYVector2f GetMousePosition() const;
 	void Internal_DrawLineWithArrow(const FNYVector2f& StartAnchorPoint, const FNYVector2f& EndAnchorPoint, const FConnectionParams& Params);
 
 	// Map for widgets
@@ -86,4 +87,18 @@ protected:
 
 	// Cache the settings
 	const UDlgSystemSettings* DialogueSettings = nullptr;
+
+#if NY_ENGINE_VERSION >= 502
+	/** Radius (in pixels, before zoom) used for detecting mouse hover on arrow endpoints */
+	static constexpr float RelinkHandleHoverRadius = 10.0f;
+
+	/**
+	 * When dragging the tail (start) of an edge, we defer the preview wire drawing to Draw()
+	 * where we have access to ArrangedNodes and can look up the child node's geometry.
+	 * DrawPreviewConnector is called before Draw(), so node geometries aren't available there.
+	 */
+	bool bDeferredTailRelinkPreview = false;
+	FNYVector2f DeferredPreviewEndpoint = FNYVector2f::ZeroVector;
+	UEdGraphPin* DeferredPreviewPin = nullptr;
+#endif // NY_ENGINE_VERSION >= 502
 };

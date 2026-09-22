@@ -46,7 +46,7 @@ public:
 			SAssignNew(ContentBorder, SBorder)
 			.BorderImage(this, &Self::GetBackgroundImage)
 			.Padding(FMargin(1.0f, 3.0f))
-			.BorderBackgroundColor(FLinearColor(.6, .6, .6, 1.0f))
+			.BorderBackgroundColor(FLinearColor(0.6f, 0.6f, 0.6f, 1.0f))
 			[
 				SNew(SHorizontalBox)
 
@@ -1744,7 +1744,7 @@ TSharedRef<SHorizontalBox> SDlgBrowser::MakeCustomObjectIconAndTextWidget(
 		.OnClicked_Static(&Self::OnBrowseAssetClicked, Class)
 		[
 			SNew(SImage)
-			.Image(FNYAppStyle::GetBrush("PropertyWindow.Button_Browse"))
+			.Image(FNYAppStyle::GetBrush("Icons.BrowseContent"))
 			.ColorAndOpacity(FSlateColor::UseForeground())
 		]
 	];
@@ -1764,7 +1764,7 @@ TSharedRef<SHorizontalBox> SDlgBrowser::MakeCustomObjectIconAndTextWidget(
 		.OnClicked_Static(&Self::OnOpenAssetClicked, Class, OpenType, FunctionNameToOpen)
 		[
 			SNew(SImage)
-			 .Image(FNYAppStyle::GetBrush("PropertyWindow.Button_Edit"))
+			 .Image(FNYAppStyle::GetBrush("Icons.Edit"))
 			 .ColorAndOpacity( FSlateColor::UseForeground() )
 		]
 	];

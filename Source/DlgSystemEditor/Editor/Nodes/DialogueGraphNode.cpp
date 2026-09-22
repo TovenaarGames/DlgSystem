@@ -220,7 +220,7 @@ void UDialogueGraphNode::GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeCo
 	// These actions (commands) are handled and registered in the FDialogueEditor class
 	if (Context->Node && !Context->bIsDebugging && !IsRootNode())
 	{
-		// Menu for right clicking on node
+		// Menu for right-clicking on node
 		FToolMenuSection& Section = Menu->AddSection("DialogueGraphNode_BaseNodeEditCRUD");
 		if (IsSpeechSequenceNode())
 		{
@@ -247,7 +247,7 @@ void UDialogueGraphNode::GetContextMenuActions(const FGraphNodeContextMenuBuilde
 	// These actions (commands) are handled and registered in the FDialogueEditor class
 	if (Context.Node && !Context.bIsDebugging && !IsRootNode())
 	{
-		// Menu for right clicking on node
+		// Menu for right-clicking on node
 		Context.MenuBuilder->BeginSection("DialogueGraphNode_BaseNodeEditCRUD");
 		{
 			if (IsSpeechSequenceNode())

@@ -3,7 +3,7 @@
 
 #include "PropertyHandle.h"
 #include "Widgets/Input/SSearchBox.h"
-#include "Widgets/Views/STileView.h"
+#include "Widgets/Views/SListView.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Layout/WidgetPath.h"
 
@@ -37,6 +37,7 @@ void SDlgTextPropertyPickList::Construct(const FArguments& InArgs)
 	OnTextCommitted = InArgs._OnTextCommitted;
 	OnKeyDownHandler = InArgs._OnKeyDownHandler;
 	bDelayChangeNotificationsWhileTyping = InArgs._DelayChangeNotificationsWhileTyping;
+	SuggestionTextJustification = InArgs._SuggestionTextJustification;
 
 	// Assign the main horizontal box of this widget
 	TSharedPtr<SHorizontalBox> ContentBox = SNew(SHorizontalBox);
@@ -95,9 +96,12 @@ FReply SDlgTextPropertyPickList::OnPreviewKeyDown(const FGeometry& MyGeometry, c
 {
 	if (InKeyEvent.GetKey() == EKeys::Escape)
 	{
-		// Clear any selection first to prevent the currently selection being set in the text box
-		ListViewWidget->ClearSelection();
-		return FReply::Handled();
+		// Clear any selection first to prevent the current selection being set in the text box
+		if (ListViewWidget.IsValid())
+		{
+			ListViewWidget->ClearSelection();
+			return FReply::Handled();
+		}
 	}
 
 	return FReply::Unhandled();
@@ -274,12 +278,11 @@ TSharedRef<SWidget> SDlgTextPropertyPickList::GetListViewWidget()
 		.Padding(0)
 		.BorderImage(FNYAppStyle::GetBrush("NoBorder"));
 
-	ListViewWidget = SNew(STileView<TextListItem>)
+	ListViewWidget = SNew(SListView<TextListItem>)
 		.SelectionMode(ESelectionMode::Single)
 		.ListItemsSource(&Suggestions)
-		.OnGenerateTile(this, &Self::HandleListGenerateRow)
-		.OnSelectionChanged(this, &Self::HandleListSelectionChanged)
-		.ItemHeight(20);
+		.OnGenerateRow(this, &Self::HandleListGenerateRow)
+		.OnSelectionChanged(this, &Self::HandleListSelectionChanged);
 
 	ListViewContainerWidget->SetContent(CreateShadowOverlay(ListViewWidget.ToSharedRef()));
 
@@ -295,6 +298,7 @@ TSharedRef<ITableRow> SDlgTextPropertyPickList::HandleListGenerateRow(TextListIt
 			SNew(STextBlock)
 			.Text(FText::FromString(*Text.Get()))
 			.HighlightText(this, &Self::GetHighlightText)
+			.Justification(SuggestionTextJustification)
 		];
 }
 
@@ -336,7 +340,7 @@ void SDlgTextPropertyPickList::HandleTextCommitted(const FText& NewText, ETextCo
 	FText CommittedText;
 	if (SelectedSuggestion.IsValid() && CommitType != ETextCommit::OnCleared)
 	{
-		// Pressed selected a suggestion, set the text
+		// Pressed a selected suggestion, set the text
 		CommittedText = FText::FromString(*SelectedSuggestion.Get());
 	}
 	else
@@ -363,7 +367,7 @@ void SDlgTextPropertyPickList::HandleTextCommitted(const FText& NewText, ETextCo
 	SetText(CommittedText);
 	OnTextCommitted.ExecuteIfBound(CommittedText, CommitType);
 
-	// Only close the menu when the user did not loose focus
+	// Only close the menu when the user did not lose focus
 	if (CommitType != ETextCommit::OnUserMovedFocus)
 	{
 		ComboButtonWidget->SetIsOpen(false);
@@ -434,7 +438,7 @@ void SDlgTextPropertyPickList::HandleListSelectionChanged(TextListItem NewValue,
 		else
 		{
 			// Can happen in the case selecting the option directly (SelectInfo == ESelectInfo::Direct)
-			// HandleTextCommitted will be called automatically because it looses focus, but we want
+			// HandleTextCommitted will be called automatically because it loses focus, but we want
 			// to close the menu explicitly
 			ComboButtonWidget->SetIsOpen(false);
 		}
@@ -454,7 +458,7 @@ void SDlgTextPropertyPickList::UpdateSuggestionList()
 	const FString TypedText = InputTextWidget.IsValid() ? InputTextWidget->GetText().ToString() : TEXT("");
 	Suggestions.Empty();
 
-	// Find out what pool of suggestions ot use
+	// Find out what pool of suggestions to use
 	TArray<FString> AllSuggestions;
 	if (bUseStringSuggestions)
 	{
@@ -481,7 +485,7 @@ void SDlgTextPropertyPickList::UpdateSuggestionList()
 	}
 
 
-	// Must have typed something, but that something must be different than the set value
+	// Must have typed something, but that something must be different from the set value
 	const bool bTypedSomething = TypedText.Len() > 0 && TypedText != TextAttribute.Get().ToString();
 	for (const FString& Suggestion : AllSuggestions)
 	{

@@ -39,6 +39,7 @@ public:
 		, _OnTextCommitted()
 		, _OnKeyDownHandler()
 		, _DelayChangeNotificationsWhileTyping(true)
+		, _SuggestionTextJustification(ETextJustify::Center)
 	{}
 		/** The Property handle of the property this widget represents. */
 		SLATE_ARGUMENT(TSharedPtr<IPropertyHandle>, PropertyHandle)
@@ -46,7 +47,7 @@ public:
 		/** If set to true, AvailableStringSuggestions is used instead of AvailableSuggestions */
 		SLATE_ARGUMENT(bool, UseStringSuggestions)
 
-		/** Does this pick list has a checkbox for ContextSensitive suggestions? */
+		/** Does this pick list have a checkbox for ContextSensitive suggestions? */
 		SLATE_ARGUMENT(bool, HasContextCheckbox)
 
 		/** The check status of the context sensitive checkbox. */
@@ -58,14 +59,14 @@ public:
 		/** The tooltip text for the context checkbox. */
 		SLATE_ATTRIBUTE(FText, ContextCheckBoxToolTipText)
 
-		/** Tooltip text to displayed all over  the place. */
+		/** Tooltip text to display all over the place. */
 		SLATE_ATTRIBUTE(FText, ToolTipText)
 
 		/** Hint text to display for the search text when there is no value */
 		SLATE_ATTRIBUTE(FText, HintText)
 
 		/**
-		 *  All possible suggestions for the search text If the context sensitive checkbox is true.
+		 *  All possible suggestions for the search text if the context sensitive checkbox is true.
 		 *  Aka the current context
 		 *  Only used if HasContextCheckbox is true.
 		 */
@@ -98,6 +99,9 @@ public:
 
 		/** Whether the SearchBox should delay notifying listeners of text changed events until the user is done typing */
 		SLATE_ARGUMENT(bool, DelayChangeNotificationsWhileTyping)
+
+		/** Text justification for the suggestion list items */
+		SLATE_ARGUMENT(ETextJustify::Type, SuggestionTextJustification)
 	SLATE_END_ARGS()
 
 	/**
@@ -130,7 +134,7 @@ public:
 	 * Checks to see if this widget currently has the keyboard focus
 	 * @return  True if this widget has keyboard focus
 	 */
-	bool HasKeyboardFocus() const override { return InputTextWidget->HasKeyboardFocus(); }
+	bool HasKeyboardFocus() const override { return InputTextWidget.IsValid() && InputTextWidget->HasKeyboardFocus(); }
 
 	/**
 	 * Called when focus is given to this widget.  This event does not bubble.
@@ -142,7 +146,7 @@ public:
 	FReply OnFocusReceived(const FGeometry& MyGeometry, const FFocusEvent& InFocusEvent) override
 	{
 		// Forward keyboard focus to our editable text widget
-		if (IsEnabled() && ComboButtonWidget.IsValid() && ComboButtonWidget->IsEnabled())
+		if (IsEnabled() && ComboButtonWidget.IsValid() && ComboButtonWidget->IsEnabled() && InputTextWidget.IsValid())
 		{
 			return FReply::Handled().SetUserFocus(InputTextWidget.ToSharedRef(), InFocusEvent.GetCause());
 		}
@@ -179,7 +183,7 @@ private:
 	/** Gets the text to highlight in the suggestion list */
 	FText GetHighlightText() const { return InputTextWidget->GetText(); }
 
-	/** Adds A SScrollBorder over a Table */
+	/** Adds an SScrollBorder over a Table */
 	TSharedRef<SWidget> CreateShadowOverlay(TSharedRef<STableViewBase> Table) const
 	{
 		return SNew(SScrollBorder, Table)
@@ -197,7 +201,7 @@ private:
 	/** Handles when text in the editable text box changed */
 	void HandleTextChanged(const FText& InSearchText);
 
-	/** Handles for when text in the editable text box is commited (pressed enter/click). */
+	/** Handles for when text in the editable text box is committed (pressed enter/click). */
 	void HandleTextCommitted(const FText& InSearchText, ETextCommit::Type CommitInfo);
 
 	/** Handles key down events to the editable text widget */
@@ -234,7 +238,7 @@ private:
 	/** All possible suggestions for the search text. When there is no context sensitive checkbox or the context sensitive checkbox is unchecked. */
 	TAttribute<TArray<FName>> SuggestionAttributes;
 
-	/** Used when the context sensitive checkbox is cehcked */
+	/** Used when the context sensitive checkbox is checked */
 	TAttribute<TArray<FName>> CurrentContextSuggestionAttributes;
 
 	/** Text Value to display for the search text/Combo Button */
@@ -276,7 +280,7 @@ private:
 	/** The context sensitive checkbox widget. */
 	TSharedPtr<SCheckBox> ContextCheckBoxWidget;
 
-	/** The menu content widget displyed on click. */
+	/** The menu content widget displayed on click. */
 	TSharedPtr<SVerticalBox> MenuWidget;
 
 	/** The editable text field aka the search box */
@@ -300,4 +304,7 @@ private:
 
 	/** Do we display the context sensitive checkbox? */
 	bool bUseStringSuggestions = false;
+
+	/** Text justification for the suggestion list items */
+	ETextJustify::Type SuggestionTextJustification = ETextJustify::Center;
 };

@@ -290,7 +290,9 @@ TArray<UObject*> UDlgManager::GetObjectsWithDialogueParticipantInterface(UObject
 {
 	TArray<UObject*> Array;
 	if (!WorldContextObject)
+	{
 		return Array;
+	}
 
 	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))
 	{
@@ -581,6 +583,12 @@ bool UDlgManager::UnregisterDialogueConsoleCommands()
 void UDlgManager::GatherParticipantsRecursive(UObject* Object, TArray<UObject*>& Array, TSet<UObject*>& AlreadyVisited)
 {
 	if (!IsValid(Object) || AlreadyVisited.Contains(Object))
+	{
+		return;
+	}
+
+	// Skip the CDO and Archetypes
+	if (Object->HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))
 	{
 		return;
 	}
